@@ -1,0 +1,1230 @@
+{
+  "atlas": "SPL Head and Neck Atlas",
+  "classified": {
+    "artery": [
+      {
+        "color": [
+          0.960784,
+          0.0588235,
+          0.235294
+        ],
+        "file": "Model_101_right_common_carotid.vtk",
+        "hierarchy": [
+          "Arteries",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 101 right common carotid"
+      },
+      {
+        "color": [
+          0.901961,
+          0.588235,
+          0.607843
+        ],
+        "file": "Model_102_left_common_carotid.vtk",
+        "hierarchy": [
+          "Arteries",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 102 left common carotid"
+      },
+      {
+        "color": [
+          0.960784,
+          0.392157,
+          0.0588235
+        ],
+        "file": "Model_103_right_subclavian_artery.vtk",
+        "hierarchy": [
+          "Arteries",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 103 right subclavian artery"
+      },
+      {
+        "color": [
+          0.901961,
+          0.843137,
+          0.588235
+        ],
+        "file": "Model_104_left_subclavian_artery.vtk",
+        "hierarchy": [
+          "Arteries",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 104 left subclavian artery"
+      },
+      {
+        "color": [
+          0.960784,
+          0.784314,
+          0.0588235
+        ],
+        "file": "Model_105_right_vertebral_artery.vtk",
+        "hierarchy": [
+          "Arteries",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 105 right vertebral artery"
+      },
+      {
+        "color": [
+          0.666667,
+          0.803922,
+          0.588235
+        ],
+        "file": "Model_106_left_vertebral_artery.vtk",
+        "hierarchy": [
+          "Arteries",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 106 left vertebral artery"
+      },
+      {
+        "color": [
+          0.666667,
+          0.960784,
+          0.0588235
+        ],
+        "file": "Model_107_right_internal_carotid.vtk",
+        "hierarchy": [
+          "Arteries",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 107 right internal carotid"
+      },
+      {
+        "color": [
+          0.588235,
+          0.803922,
+          0.745098
+        ],
+        "file": "Model_108_left_internal_carotid.vtk",
+        "hierarchy": [
+          "Arteries",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 108 left internal carotid"
+      },
+      {
+        "color": [
+          0.0588235,
+          0.313725,
+          0.960784
+        ],
+        "file": "Model_111_right_external_carotid.vtk",
+        "hierarchy": [
+          "Arteries",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 111 right external carotid"
+      },
+      {
+        "color": [
+          0.529412,
+          0.529412,
+          0.784314
+        ],
+        "file": "Model_112_left_external_carotid.vtk",
+        "hierarchy": [
+          "Arteries",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 112 left external carotid"
+      },
+      {
+        "color": [
+          0.901961,
+          0.0588235,
+          0.588235
+        ],
+        "file": "Model_115_arch_of_aorta.vtk",
+        "hierarchy": [
+          "Arteries",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 115 arch of aorta"
+      },
+      {
+        "color": [
+          0.901961,
+          0.0588235,
+          0.0588235
+        ],
+        "file": "Model_116_brachiocephalic_trunk.vtk",
+        "hierarchy": [
+          "Arteries",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 116 brachiocephalic trunk"
+      }
+    ],
+    "bone": [
+      {
+        "color": [
+          0.941176,
+          0.54902,
+          0.0588235
+        ],
+        "file": "Model_9_hyoid.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 9 hyoid"
+      },
+      {
+        "color": [
+          0.960784,
+          0.960784,
+          0.960784
+        ],
+        "file": "Model_10_skull.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 10 skull"
+      },
+      {
+        "color": [
+          0.862745,
+          0.882353,
+          0.411765
+        ],
+        "file": "Model_25_mandible.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 25 mandible"
+      },
+      {
+        "color": [
+          0.784314,
+          0.654902,
+          0.784314
+        ],
+        "file": "Model_63_left_zygomatic_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 63 left zygomatic muscle"
+      },
+      {
+        "color": [
+          0.666667,
+          0.223529,
+          0.65098
+        ],
+        "file": "Model_64_right_zygomatic_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 64 right zygomatic muscle"
+      }
+    ],
+    "unclassified": [
+      {
+        "color": [
+          0.784314,
+          0.784314,
+          0.784314
+        ],
+        "file": "Model_11_atlas.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 11 atlas"
+      },
+      {
+        "color": [
+          0.901961,
+          0.823529,
+          0.0980392
+        ],
+        "file": "Model_12_axis.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 12 axis"
+      },
+      {
+        "color": [
+          1.0,
+          0.686275,
+          0.529412
+        ],
+        "file": "Model_13_cervical3.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 13 cervical3"
+      },
+      {
+        "color": [
+          0.764706,
+          0.196078,
+          0.254902
+        ],
+        "file": "Model_14_cervical4.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 14 cervical4"
+      },
+      {
+        "color": [
+          0.882353,
+          0.352941,
+          0.431373
+        ],
+        "file": "Model_15_cervical5.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 15 cervical5"
+      },
+      {
+        "color": [
+          0.411765,
+          0.372549,
+          0.843137
+        ],
+        "file": "Model_16_cervical6.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 16 cervical6"
+      },
+      {
+        "color": [
+          0.137255,
+          0.392157,
+          0.294118
+        ],
+        "file": "Model_17_cervical7.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 17 cervical7"
+      },
+      {
+        "color": [
+          0.823529,
+          0.901961,
+          0.117647
+        ],
+        "file": "Model_21_thoracic1.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 21 thoracic1"
+      },
+      {
+        "color": [
+          0.901961,
+          0.862745,
+          0.117647
+        ],
+        "file": "Model_22_thoracic2.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 22 thoracic2"
+      },
+      {
+        "color": [
+          0.901961,
+          0.705882,
+          0.117647
+        ],
+        "file": "Model_23_thoracic3.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 23 thoracic3"
+      },
+      {
+        "color": [
+          0.901961,
+          0.392157,
+          0.117647
+        ],
+        "file": "Model_24_thoracic4.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 24 thoracic4"
+      },
+      {
+        "color": [
+          0.686275,
+          0.352941,
+          0.27451
+        ],
+        "file": "Model_26_right_clavicle.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 26 right clavicle"
+      },
+      {
+        "color": [
+          0.54902,
+          0.254902,
+          0.196078
+        ],
+        "file": "Model_27_left_clavicle.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 27 left clavicle"
+      },
+      {
+        "color": [
+          0.509804,
+          0.137255,
+          0.490196
+        ],
+        "file": "Model_28_sternum.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 28 sternum"
+      },
+      {
+        "color": [
+          0.392157,
+          0.666667,
+          0.705882
+        ],
+        "file": "Model_31_rib1.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 31 rib1"
+      },
+      {
+        "color": [
+          0.392157,
+          0.509804,
+          0.705882
+        ],
+        "file": "Model_32_rib2.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 32 rib2"
+      },
+      {
+        "color": [
+          0.431373,
+          0.392157,
+          0.705882
+        ],
+        "file": "Model_33_rib3.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 33 rib3"
+      },
+      {
+        "color": [
+          0.529412,
+          0.392157,
+          0.705882
+        ],
+        "file": "Model_34_rib4.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 34 rib4"
+      },
+      {
+        "color": [
+          0.627451,
+          0.392157,
+          0.705882
+        ],
+        "file": "Model_35_rib5.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 35 rib5"
+      },
+      {
+        "color": [
+          1.0,
+          0.27451,
+          0.117647
+        ],
+        "file": "Model_36_thoracic5.vtk",
+        "hierarchy": [
+          "Bones",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 36 thoracic5"
+      },
+      {
+        "color": [
+          0.956863,
+          0.196078,
+          0.839216
+        ],
+        "file": "Model_49_left_parotid_gland.vtk",
+        "hierarchy": [
+          "Glands",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 49 left parotid gland"
+      },
+      {
+        "color": [
+          0.956863,
+          0.839216,
+          0.196078
+        ],
+        "file": "Model_50_right_parotid_gland.vtk",
+        "hierarchy": [
+          "Glands",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 50 right parotid gland"
+      },
+      {
+        "color": [
+          0.737255,
+          0.254902,
+          0.109804
+        ],
+        "file": "Model_51_left_temporalis_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 51 left temporalis muscle"
+      },
+      {
+        "color": [
+          0.65098,
+          0.329412,
+          0.368627
+        ],
+        "file": "Model_52_right_temporalis_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 52 right temporalis muscle"
+      },
+      {
+        "color": [
+          0.933333,
+          0.643137,
+          0.0196078
+        ],
+        "file": "Model_53_left_trapezius_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 53 left trapezius muscle"
+      },
+      {
+        "color": [
+          0.835294,
+          0.733333,
+          0.517647
+        ],
+        "file": "Model_54_right_trapezius_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 54 right trapezius muscle"
+      },
+      {
+        "color": [
+          0.854902,
+          0.92549,
+          0.12549
+        ],
+        "file": "Model_55_left_masseter_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 55 left masseter muscle"
+      },
+      {
+        "color": [
+          0.752941,
+          0.796078,
+          0.309804
+        ],
+        "file": "Model_56_right_masseter_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 56 right masseter muscle"
+      },
+      {
+        "color": [
+          0.458824,
+          0.54902,
+          0.65098
+        ],
+        "file": "Model_57_left_levator_scapulae_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 57 left levator scapulae muscle"
+      },
+      {
+        "color": [
+          0.129412,
+          0.482353,
+          0.901961
+        ],
+        "file": "Model_58_right_levator_scapulae_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 58 right levator scapulae muscle"
+      },
+      {
+        "color": [
+          0.588235,
+          0.54902,
+          0.666667
+        ],
+        "file": "Model_59_left_scalenius_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 59 left scalenius muscle"
+      },
+      {
+        "color": [
+          0.388235,
+          0.129412,
+          0.901961
+        ],
+        "file": "Model_60_right_scalenius_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 60 right scalenius muscle"
+      },
+      {
+        "color": [
+          0.529412,
+          0.882353,
+          0.345098
+        ],
+        "file": "Model_61_left_sternocleidomastoideus_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 61 left sternocleidomastoideus muscle"
+      },
+      {
+        "color": [
+          0.211765,
+          0.552941,
+          0.172549
+        ],
+        "file": "Model_62_right_sternocleidomastoideus_muscle.vtk",
+        "hierarchy": [
+          "Muscles",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 62 right sternocleidomastoideus muscle"
+      },
+      {
+        "color": [
+          0.831373,
+          0.694118,
+          0.694118
+        ],
+        "file": "Model_118_thyroid_gland.vtk",
+        "hierarchy": [
+          "Glands",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 118 thyroid gland"
+      },
+      {
+        "color": [
+          0.694118,
+          0.694118,
+          0.694118
+        ],
+        "file": "Model_119_thyroid_cartilage.vtk",
+        "hierarchy": [
+          "Cartilage",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 119 thyroid cartilage"
+      },
+      {
+        "color": [
+          0.882353,
+          0.882353,
+          0.882353
+        ],
+        "file": "Model_120_cricoid_cartilage.vtk",
+        "hierarchy": [
+          "Cartilage",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 120 cricoid cartilage"
+      }
+    ],
+    "vein": [
+      {
+        "color": [
+          0.0588235,
+          0.960784,
+          0.960784
+        ],
+        "file": "Model_109_right_internal_jugular_vein.vtk",
+        "hierarchy": [
+          "Veins",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 109 right internal jugular vein"
+      },
+      {
+        "color": [
+          0.509804,
+          0.686275,
+          0.784314
+        ],
+        "file": "Model_110_left_internal_jugular_vein.vtk",
+        "hierarchy": [
+          "Veins",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 110 left internal jugular vein"
+      },
+      {
+        "color": [
+          0.705882,
+          0.0588235,
+          0.960784
+        ],
+        "file": "Model_113_right_subclavian_vein.vtk",
+        "hierarchy": [
+          "Veins",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 113 right subclavian vein"
+      },
+      {
+        "color": [
+          0.705882,
+          0.509804,
+          0.784314
+        ],
+        "file": "Model_114_left_subclavian_vein.vtk",
+        "hierarchy": [
+          "Veins",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 114 left subclavian vein"
+      },
+      {
+        "color": [
+          0.470588,
+          0.588235,
+          0.901961
+        ],
+        "file": "Model_117_superior_vena_cava.vtk",
+        "hierarchy": [
+          "Veins",
+          "Vessels",
+          "Head and Neck Atlas"
+        ],
+        "name": "Model 117 superior vena cava"
+      }
+    ]
+  },
+  "counts": {
+    "artery": 12,
+    "bone": 5,
+    "unclassified": 37,
+    "vein": 5
+  },
+  "error": null,
+  "generatedAt": "2026-08-19T06:25:44.766779+00:00",
+  "results": {
+    "artery": {
+      "bytes": 1387076,
+      "faces": 68848,
+      "file": "head-arteries.glb",
+      "kind": "artery",
+      "models": 12,
+      "sourceFaces": 68848,
+      "structures": [
+        {
+          "color": [
+            0.960784,
+            0.0588235,
+            0.235294
+          ],
+          "faces": 6432,
+          "hierarchy": [
+            "Arteries",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 101 right common carotid",
+          "opacity": 1.0,
+          "sourceFaces": 6432,
+          "sourceFile": "Model_101_right_common_carotid.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.901961,
+            0.588235,
+            0.607843
+          ],
+          "faces": 5574,
+          "hierarchy": [
+            "Arteries",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 102 left common carotid",
+          "opacity": 1.0,
+          "sourceFaces": 5574,
+          "sourceFile": "Model_102_left_common_carotid.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.960784,
+            0.392157,
+            0.0588235
+          ],
+          "faces": 8316,
+          "hierarchy": [
+            "Arteries",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 103 right subclavian artery",
+          "opacity": 1.0,
+          "sourceFaces": 8316,
+          "sourceFile": "Model_103_right_subclavian_artery.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.901961,
+            0.843137,
+            0.588235
+          ],
+          "faces": 7838,
+          "hierarchy": [
+            "Arteries",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 104 left subclavian artery",
+          "opacity": 1.0,
+          "sourceFaces": 7838,
+          "sourceFile": "Model_104_left_subclavian_artery.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.960784,
+            0.784314,
+            0.0588235
+          ],
+          "faces": 6836,
+          "hierarchy": [
+            "Arteries",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 105 right vertebral artery",
+          "opacity": 1.0,
+          "sourceFaces": 6836,
+          "sourceFile": "Model_105_right_vertebral_artery.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.666667,
+            0.803922,
+            0.588235
+          ],
+          "faces": 6048,
+          "hierarchy": [
+            "Arteries",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 106 left vertebral artery",
+          "opacity": 1.0,
+          "sourceFaces": 6048,
+          "sourceFile": "Model_106_left_vertebral_artery.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.666667,
+            0.960784,
+            0.0588235
+          ],
+          "faces": 2568,
+          "hierarchy": [
+            "Arteries",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 107 right internal carotid",
+          "opacity": 1.0,
+          "sourceFaces": 2568,
+          "sourceFile": "Model_107_right_internal_carotid.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.588235,
+            0.803922,
+            0.745098
+          ],
+          "faces": 3194,
+          "hierarchy": [
+            "Arteries",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 108 left internal carotid",
+          "opacity": 1.0,
+          "sourceFaces": 3194,
+          "sourceFile": "Model_108_left_internal_carotid.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.0588235,
+            0.313725,
+            0.960784
+          ],
+          "faces": 1566,
+          "hierarchy": [
+            "Arteries",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 111 right external carotid",
+          "opacity": 1.0,
+          "sourceFaces": 1566,
+          "sourceFile": "Model_111_right_external_carotid.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.529412,
+            0.529412,
+            0.784314
+          ],
+          "faces": 1118,
+          "hierarchy": [
+            "Arteries",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 112 left external carotid",
+          "opacity": 1.0,
+          "sourceFaces": 1118,
+          "sourceFile": "Model_112_left_external_carotid.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.901961,
+            0.0588235,
+            0.588235
+          ],
+          "faces": 17564,
+          "hierarchy": [
+            "Arteries",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 115 arch of aorta",
+          "opacity": 1.0,
+          "sourceFaces": 17564,
+          "sourceFile": "Model_115_arch_of_aorta.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.901961,
+            0.0588235,
+            0.0588235
+          ],
+          "faces": 1794,
+          "hierarchy": [
+            "Arteries",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 116 brachiocephalic trunk",
+          "opacity": 1.0,
+          "sourceFaces": 1794,
+          "sourceFile": "Model_116_brachiocephalic_trunk.vtk",
+          "warnings": []
+        }
+      ]
+    },
+    "bone": {
+      "bytes": 3014132,
+      "faces": 150900,
+      "file": "head-bones.glb",
+      "kind": "bone",
+      "models": 5,
+      "sourceFaces": 418266,
+      "structures": [
+        {
+          "color": [
+            0.941176,
+            0.54902,
+            0.0588235
+          ],
+          "faces": 3144,
+          "hierarchy": [
+            "Bones",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 9 hyoid",
+          "opacity": 1.0,
+          "sourceFaces": 3144,
+          "sourceFile": "Model_9_hyoid.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.960784,
+            0.960784,
+            0.960784
+          ],
+          "faces": 120000,
+          "hierarchy": [
+            "Bones",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 10 skull",
+          "opacity": 1.0,
+          "sourceFaces": 375534,
+          "sourceFile": "Model_10_skull.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.862745,
+            0.882353,
+            0.411765
+          ],
+          "faces": 23952,
+          "hierarchy": [
+            "Bones",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 25 mandible",
+          "opacity": 1.0,
+          "sourceFaces": 35784,
+          "sourceFile": "Model_25_mandible.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.784314,
+            0.654902,
+            0.784314
+          ],
+          "faces": 1734,
+          "hierarchy": [
+            "Muscles",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 63 left zygomatic muscle",
+          "opacity": 1.0,
+          "sourceFaces": 1734,
+          "sourceFile": "Model_63_left_zygomatic_muscle.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.666667,
+            0.223529,
+            0.65098
+          ],
+          "faces": 2070,
+          "hierarchy": [
+            "Muscles",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 64 right zygomatic muscle",
+          "opacity": 1.0,
+          "sourceFaces": 2070,
+          "sourceFile": "Model_64_right_zygomatic_muscle.vtk",
+          "warnings": []
+        }
+      ]
+    },
+    "vein": {
+      "bytes": 962200,
+      "faces": 47886,
+      "file": "head-veins.glb",
+      "kind": "vein",
+      "models": 5,
+      "sourceFaces": 47886,
+      "structures": [
+        {
+          "color": [
+            0.0588235,
+            0.960784,
+            0.960784
+          ],
+          "faces": 12210,
+          "hierarchy": [
+            "Veins",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 109 right internal jugular vein",
+          "opacity": 1.0,
+          "sourceFaces": 12210,
+          "sourceFile": "Model_109_right_internal_jugular_vein.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.509804,
+            0.686275,
+            0.784314
+          ],
+          "faces": 7100,
+          "hierarchy": [
+            "Veins",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 110 left internal jugular vein",
+          "opacity": 1.0,
+          "sourceFaces": 7100,
+          "sourceFile": "Model_110_left_internal_jugular_vein.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.705882,
+            0.0588235,
+            0.960784
+          ],
+          "faces": 10284,
+          "hierarchy": [
+            "Veins",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 113 right subclavian vein",
+          "opacity": 1.0,
+          "sourceFaces": 10284,
+          "sourceFile": "Model_113_right_subclavian_vein.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.705882,
+            0.509804,
+            0.784314
+          ],
+          "faces": 13748,
+          "hierarchy": [
+            "Veins",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 114 left subclavian vein",
+          "opacity": 1.0,
+          "sourceFaces": 13748,
+          "sourceFile": "Model_114_left_subclavian_vein.vtk",
+          "warnings": []
+        },
+        {
+          "color": [
+            0.470588,
+            0.588235,
+            0.901961
+          ],
+          "faces": 4544,
+          "hierarchy": [
+            "Veins",
+            "Vessels",
+            "Head and Neck Atlas"
+          ],
+          "name": "Model 117 superior vena cava",
+          "opacity": 1.0,
+          "sourceFaces": 4544,
+          "sourceFile": "Model_117_superior_vena_cava.vtk",
+          "warnings": []
+        }
+      ]
+    }
+  },
+  "source": "https://www.openanatomy.org/atlases/nac/head-neck-2016-09.zip",
+  "unresolvedStorageFiles": []
+}
