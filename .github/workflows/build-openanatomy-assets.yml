@@ -1,5 +1,6 @@
 name: Build Open Anatomy head assets
 
+# Asset generation is intentionally separated from the runtime viewer.
 on:
   workflow_dispatch:
   push:
