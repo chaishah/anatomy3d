@@ -1,5 +1,6 @@
 name: Build BodyParts3D detailed head assets
 
+# PRs run the full geometry conversion so source selection and the official download path are validated before deployment.
 on:
   workflow_dispatch:
   push:
