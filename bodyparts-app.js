@@ -5,6 +5,7 @@ import { FEATURED_VESSEL_IDS, infoById, matchAnatomyInfo } from './anatomy-data.
 
 const ASSET_BASE = './assets/bodyparts3d/';
 const MANIFEST_URL = `${ASSET_BASE}manifest.json`;
+const SALIVARY_ASSET_URL = `${ASSET_BASE}head-salivary.glb`;
 const BODY_PARTS_PAGE = 'https://dbarchive.biosciencedbc.jp/en/bodyparts3d/';
 const SUBMANDIBULAR_SOURCE = 'https://www.ncbi.nlm.nih.gov/books/NBK542272/';
 const SUBLINGUAL_SOURCE = 'https://www.ncbi.nlm.nih.gov/books/NBK535426/';
@@ -98,7 +99,12 @@ const atlasRoot = new THREE.Group();
 scene.add(atlasRoot);
 const groups = Object.fromEntries(Object.keys(LAYERS).map((kind) => [kind, new THREE.Group()]));
 Object.values(groups).forEach((group) => atlasRoot.add(group));
+const salivaryGroup = new THREE.Group();
+salivaryGroup.name = 'Salivary study overlay';
+atlasRoot.add(salivaryGroup);
+
 const layerState = Object.fromEntries(Object.keys(LAYERS).map((kind) => [kind, { loaded: false, loading: null, error: null, meshes: [] }]));
+const salivaryState = { loaded: false, loading: null, error: null, meshes: [] };
 
 let catalog = [];
 let catalogByFj = new Map();
@@ -212,7 +218,7 @@ function materialFor(kind) {
   });
 }
 
-function prepareMesh(mesh, kind) {
+function prepareMesh(mesh, kind, options = {}) {
   const ids = parseIds(mesh.name);
   const entry = ids.fj ? catalogByFj.get(ids.fj) : null;
   const rawName = entry?.name || mesh.name.split('·')[0] || mesh.name;
@@ -223,18 +229,25 @@ function prepareMesh(mesh, kind) {
   mesh.userData.bp = entry?.bp || null;
   mesh.userData.faces = entry?.faces || Math.round((mesh.geometry?.index?.count || mesh.geometry?.attributes?.position?.count || 0) / 3) || null;
   mesh.userData.hiddenByUser = false;
+  mesh.userData.studyOverlay = options.studyOverlay || null;
   mesh.material = materialFor(kind);
   mesh.userData.baseColor = mesh.material.color.clone();
   mesh.renderOrder = { organ: 0, muscle: 1, bone: 2, vein: 4, artery: 5, nerve: 6 }[kind] || 2;
   mesh.frustumCulled = true;
   if (!mesh.geometry?.attributes?.normal) mesh.geometry?.computeVertexNormals?.();
   interactiveMeshes.push(mesh);
-  layerState[kind].meshes.push(mesh);
-  if (entry) entry.mesh = mesh;
+  if (options.studyOverlay === 'salivary') salivaryState.meshes.push(mesh);
+  else layerState[kind].meshes.push(mesh);
+  if (entry && (!entry.mesh || options.studyOverlay === 'salivary')) entry.mesh = mesh;
 }
 
 function layerVisible(kind) {
   return Boolean(layerToggles[kind]?.checked);
+}
+
+function meshLayerVisible(mesh) {
+  if (mesh.userData.studyOverlay === 'salivary') return studyMode === 'salivary';
+  return layerVisible(mesh.userData.kind);
 }
 
 function updateMeshOpacity(mesh) {
@@ -256,7 +269,7 @@ function updateMeshOpacity(mesh) {
 
 function updateVisibility() {
   for (const mesh of interactiveMeshes) {
-    mesh.visible = layerVisible(mesh.userData.kind)
+    mesh.visible = meshLayerVisible(mesh)
       && !mesh.userData.hiddenByUser
       && studyAllows(mesh.userData.displayName, mesh.userData.kind);
     updateMeshOpacity(mesh);
@@ -304,6 +317,28 @@ async function loadLayer(kind) {
   return state.loading;
 }
 
+async function loadSalivaryOverlay() {
+  if (salivaryState.loaded) return salivaryState;
+  if (salivaryState.loading) return salivaryState.loading;
+  salivaryState.error = null;
+  salivaryState.loading = loadGLB(`${SALIVARY_ASSET_URL}?v=1`).then((gltf) => {
+    gltf.scene.traverse((obj) => {
+      if (obj.isMesh && obj.geometry?.attributes?.position) prepareMesh(obj, 'organ', { studyOverlay: 'salivary' });
+    });
+    salivaryGroup.add(gltf.scene);
+    salivaryState.loaded = true;
+    salivaryState.loading = null;
+    updateVisibility();
+    return salivaryState;
+  }).catch((error) => {
+    console.error('Could not load salivary study asset', error);
+    salivaryState.error = error;
+    salivaryState.loading = null;
+    throw error;
+  });
+  return salivaryState.loading;
+}
+
 function computeBounds(meshes = interactiveMeshes, visibleOnly = false) {
   const box = new THREE.Box3();
   let has = false;
@@ -341,9 +376,10 @@ function focusOn(mesh) {
 
 function clearHighlight() {
   if (!selected?.material?.color) return;
-  selected.material.color.copy(selected.userData.baseColor);
-  selected.material.emissive?.set?.(0x000000);
-  updateMeshOpacity(selected);
+  const previous = selected;
+  previous.material.emissive?.set?.(0x000000);
+  if (studyMode === 'salivary' && isSalivaryGlandName(previous.userData.displayName)) previous.material.color.copy(GLAND_COLOR);
+  else previous.material.color.copy(previous.userData.baseColor);
 }
 
 function highlight(mesh) {
@@ -410,6 +446,7 @@ function renderSalivaryStudyInfo() {
   infoDetails.innerHTML = '';
   appendDetail('Available 3D glands', 'Left and right submandibular glands; left and right sublingual glands.');
   appendDetail('Context shown', 'Mandible and hyoid; tongue; mylohyoid, hyoglossus, genioglossus, geniohyoid, digastric and stylohyoid where available; lingual and hypoglossal nerves; facial, lingual, submental and sublingual vessels where available.');
+  appendDetail('Performance', 'The gland and tongue study geometry is loaded from a dedicated ~54 KB BodyParts3D-derived GLB instead of downloading the full brain/eye/organ layer.');
   appendDetail('Dataset limitation', 'A separate parotid gland or major salivary duct mesh is not present in the BodyParts3D v4.3 manifest used by this app, so no synthetic parotid or duct geometry is added.');
   infoSource.replaceChildren();
   const link = document.createElement('a');
@@ -444,17 +481,23 @@ function selectMesh(mesh, focus = false) {
   if (focus) focusOn(mesh);
 }
 
+function isActiveStudyEntry(entry) {
+  return studyMode === 'salivary' && entry.mesh?.userData?.studyOverlay === 'salivary';
+}
+
 async function selectCatalogEntry(entry) {
-  if (!layerVisible(entry.kind)) layerToggles[entry.kind].checked = true;
-  if (!layerState[entry.kind].loaded) {
-    atlasStatus.textContent = `Loading ${LAYERS[entry.kind].label.toLowerCase()}…`;
-    atlasStatus.dataset.state = 'loading';
-    try {
-      await loadLayer(entry.kind);
-    } catch {
-      atlasStatus.textContent = `Could not load ${LAYERS[entry.kind].label.toLowerCase()}.`;
-      atlasStatus.dataset.state = 'error';
-      return;
+  if (!isActiveStudyEntry(entry)) {
+    if (!layerVisible(entry.kind)) layerToggles[entry.kind].checked = true;
+    if (!layerState[entry.kind].loaded) {
+      atlasStatus.textContent = `Loading ${LAYERS[entry.kind].label.toLowerCase()}…`;
+      atlasStatus.dataset.state = 'loading';
+      try {
+        await loadLayer(entry.kind);
+      } catch {
+        atlasStatus.textContent = `Could not load ${LAYERS[entry.kind].label.toLowerCase()}.`;
+        atlasStatus.dataset.state = 'error';
+        return;
+      }
     }
   }
   updateVisibility();
@@ -477,7 +520,8 @@ function renderStructureList(query = '') {
   listEl.innerHTML = '';
   for (const entry of items.slice(0, 500)) {
     const button = document.createElement('button');
-    button.className = `structure-item${entry.mesh === selected ? ' active' : ''}${layerVisible(entry.kind) ? '' : ' layer-off'}`;
+    const entryOn = isActiveStudyEntry(entry) || layerVisible(entry.kind);
+    button.className = `structure-item${entry.mesh === selected ? ' active' : ''}${entryOn ? '' : ' layer-off'}`;
     const dot = document.createElement('span');
     dot.className = `structure-dot ${entry.kind}`;
     const label = document.createElement('span');
@@ -627,22 +671,35 @@ async function activateSalivaryMode() {
   syncStudyUI();
   clearSelection(false);
   setBoneOpacity(0.22);
-  for (const kind of Object.keys(LAYERS)) layerToggles[kind].checked = true;
+
+  for (const kind of ['bone', 'artery', 'vein', 'nerve', 'muscle']) layerToggles[kind].checked = true;
+  layerToggles.organ.checked = false;
+  syncMobileButtons();
+
   atlasStatus.textContent = 'Loading salivary gland study context…';
   atlasStatus.dataset.state = 'loading';
-  const results = await Promise.allSettled(Object.keys(LAYERS).map((kind) => loadLayer(kind)));
+  const results = await Promise.allSettled([
+    loadLayer('bone'),
+    loadLayer('artery'),
+    loadLayer('vein'),
+    loadLayer('nerve'),
+    loadLayer('muscle'),
+    loadSalivaryOverlay(),
+  ]);
   const failed = results.filter((result) => result.status === 'rejected').length;
+
   for (const mesh of interactiveMeshes) mesh.userData.hiddenByUser = false;
   updateVisibility();
   renderSalivaryStudyInfo();
   syncStudyUI();
-  const focusMeshes = interactiveMeshes.filter((mesh) => mesh.visible && isSalivaryGlandName(mesh.userData.displayName));
+
   const contextMeshes = interactiveMeshes.filter((mesh) => mesh.visible);
-  const box = computeBounds(focusMeshes.length ? [...focusMeshes, ...contextMeshes] : contextMeshes);
+  const box = computeBounds(contextMeshes);
   fitCamera(box.isEmpty() ? headBounds : box, new THREE.Vector3(0, 0, 1), 1.18);
+
   atlasStatus.textContent = failed
     ? `Salivary study mode active · ${failed} optional layer${failed === 1 ? '' : 's'} could not load.`
-    : 'Salivary study mode active · real BodyParts3D glands and anatomical context loaded.';
+    : 'Salivary study mode active · lightweight gland asset and anatomical context loaded.';
   atlasStatus.dataset.state = failed ? 'error' : 'ready';
 }
 
@@ -669,7 +726,7 @@ async function selectSalivaryTarget(target) {
 async function boot() {
   try {
     loadingText.textContent = 'Reading BodyParts3D structure manifest…';
-    const response = await fetch(`${MANIFEST_URL}?v=bp43-3`, { cache: 'no-cache' });
+    const response = await fetch(`${MANIFEST_URL}?v=bp43-4`, { cache: 'no-cache' });
     if (!response.ok) throw new Error(`Manifest HTTP ${response.status}`);
     const manifest = await response.json();
     buildCatalog(manifest);
