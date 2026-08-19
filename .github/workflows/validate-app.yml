@@ -1,0 +1,35 @@
+name: Validate Anatomy3D app
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - '*.js'
+      - '*.html'
+      - '*.css'
+      - '.github/workflows/validate-app.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Validate JavaScript syntax
+        run: |
+          node --check bodyparts-app.js
+          node --check anatomy-data.js
+
+      - name: Validate required BodyParts3D assets
+        run: |
+          test -s assets/bodyparts3d/head-bones.glb
+          test -s assets/bodyparts3d/head-arteries.glb
+          test -s assets/bodyparts3d/head-veins.glb
+          test -s assets/bodyparts3d/head-salivary.glb
+          python -m json.tool assets/bodyparts3d/salivary-manifest.json >/dev/null
