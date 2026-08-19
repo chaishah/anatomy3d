@@ -1,0 +1,47 @@
+.mobile-layer-bar {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .mobile-layer-bar {
+    position: absolute;
+    z-index: 4;
+    top: 58px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 999px;
+    background: rgba(10,14,20,.78);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 8px 28px rgba(0,0,0,.2);
+  }
+
+  .mobile-layer-bar button {
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 999px;
+    padding: 7px 9px;
+    background: transparent;
+    color: #8f9baa;
+    font-size: .68rem;
+    cursor: pointer;
+  }
+
+  .mobile-layer-bar button.active {
+    color: #fff;
+    background: rgba(255,255,255,.08);
+  }
+
+  .mobile-layer-bar button[data-mobile-layer="bone"].active { border-color: rgba(217,221,227,.35); }
+  .mobile-layer-bar button[data-mobile-layer="artery"].active { border-color: rgba(217,87,87,.55); }
+  .mobile-layer-bar button[data-mobile-layer="vein"].active { border-color: rgba(77,127,214,.58); }
+}
+
+@media (max-width: 560px) {
+  .mobile-layer-bar {
+    top: 52px;
+  }
+}
