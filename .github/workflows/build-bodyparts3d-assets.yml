@@ -7,6 +7,11 @@ on:
     paths:
       - tools/build_bodyparts3d_assets.py
       - .github/workflows/build-bodyparts3d-assets.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - tools/build_bodyparts3d_assets.py
+      - .github/workflows/build-bodyparts3d-assets.yml
 
 permissions:
   contents: write
@@ -14,7 +19,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: bodyparts3d-assets
+  group: bodyparts3d-assets-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -67,7 +72,7 @@ jobs:
           retention-days: 5
 
       - name: Commit generated BodyParts3D assets
-        if: steps.build.outcome == 'success'
+        if: steps.build.outcome == 'success' && github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -80,11 +85,11 @@ jobs:
           fi
 
       - name: Configure Pages
-        if: steps.build.outcome == 'success'
+        if: steps.build.outcome == 'success' && github.event_name == 'push'
         uses: actions/configure-pages@v5
 
       - name: Upload generated checkout to Pages
-        if: steps.build.outcome == 'success'
+        if: steps.build.outcome == 'success' && github.event_name == 'push'
         uses: actions/upload-pages-artifact@v4
         with:
           path: .
