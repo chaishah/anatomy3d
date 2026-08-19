@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0a0e14" />
   <meta name="description" content="Detailed interactive 3D head anatomy explorer using BodyParts3D v4.3 meshes." />
   <title>Anatomy3D — Detailed BodyParts3D Head Atlas</title>
-  <link rel="stylesheet" href="./bodyparts.css?v=bp43-2" />
+  <link rel="stylesheet" href="./bodyparts.css?v=bp43-3" />
   <script type="importmap">
     {
       "imports": {
@@ -48,6 +48,21 @@
           <p id="vesselStatus" class="load-status">Loading detailed BodyParts3D atlas…</p>
         </section>
 
+        <section class="study-card" aria-label="Study modes">
+          <div class="section-heading compact"><span>Study mode</span><span id="studyModeBadge" class="muted-small">Off</span></div>
+          <div class="study-actions">
+            <button id="salivaryPresetBtn" class="study-primary">Salivary glands</button>
+            <button id="clearStudyPresetBtn" class="study-secondary" disabled>Clear</button>
+          </div>
+          <p id="studyModeStatus" class="study-note">Focus the atlas on the submandibular and sublingual glands with their nearby nerves, vessels, floor-of-mouth muscles, mandible and tongue.</p>
+          <div class="salivary-shortcuts" aria-label="Salivary gland shortcuts">
+            <button data-salivary-target="left submandibular gland">Left submandibular</button>
+            <button data-salivary-target="right submandibular gland">Right submandibular</button>
+            <button data-salivary-target="left sublingual gland">Left sublingual</button>
+            <button data-salivary-target="right sublingual gland">Right sublingual</button>
+          </div>
+        </section>
+
         <div class="section-heading"><span>Atlas structures</span><span id="structureCount" class="pill">0</span></div>
         <div id="structureList" class="structure-list" aria-live="polite"></div>
         <div class="section-heading guide-heading"><span>Key head vessels</span></div>
@@ -65,6 +80,13 @@
           <button data-mobile-layer="nerve" aria-pressed="false"><i class="legend-dot nerve"></i>Nerve</button>
           <button data-mobile-layer="muscle" aria-pressed="false"><i class="legend-dot muscle"></i>Muscle</button>
           <button data-mobile-layer="organ" aria-pressed="false"><i class="legend-dot organ"></i>Brain</button>
+        </div>
+        <div class="mobile-study-bar" aria-label="Mobile study and opacity controls">
+          <button id="mobileSalivaryPresetBtn" class="mobile-study-button">Salivary</button>
+          <label class="mobile-opacity-label" for="mobileBoneOpacityInput">
+            <span>Bone opacity <strong id="mobileBoneOpacityValue">42%</strong></span>
+            <input id="mobileBoneOpacityInput" type="range" min="0.10" max="1" value="0.42" step="0.04" />
+          </label>
         </div>
         <div class="viewer-legend" aria-hidden="true"><span><i class="legend-dot artery"></i>Artery</span><span><i class="legend-dot vein"></i>Vein</span><span><i class="legend-dot nerve"></i>Nerve</span><span><i class="legend-dot bone"></i>Bone</span></div>
         <div class="gesture-hint">Drag to rotate · Scroll/pinch to zoom · Tap a structure</div>
@@ -86,12 +108,13 @@
     <p class="eyebrow">Source & scope</p>
     <h2>BodyParts3D Detailed Head Atlas</h2>
     <p>This version uses detailed BodyParts3D / Anatomography v4.3 component meshes for head bones, teeth, arteries, veins, nerves, muscles, brain, eye and related structures.</p>
+    <p>The salivary study mode uses the real left/right submandibular and sublingual gland meshes available in BodyParts3D, together with nearby atlas structures. A separate parotid gland or major salivary duct mesh is not present in the current BodyParts3D v4.3 manifest used by this app.</p>
     <p>The source geometry shares one atlas coordinate system. It is converted once to the Three.js coordinate basis and split into lazy-loaded web layers, preserving FJ and FMA identifiers for each selectable mesh.</p>
     <p>BodyParts3D data is attributed to the Database Center for Life Science. See <code>ATTRIBUTION.md</code> and <code>assets/bodyparts3d/manifest.json</code> for source, license and modification details.</p>
     <p>This application is an educational anatomy reference and is not diagnostic or patient-specific.</p>
   </dialog>
 
   <noscript>This app requires JavaScript and WebGL.</noscript>
-  <script type="module" src="./bodyparts-app.js?v=bp43-2"></script>
+  <script type="module" src="./bodyparts-app.js?v=bp43-3"></script>
 </body>
 </html>
