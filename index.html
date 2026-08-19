@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f14" />
-  <meta name="description" content="Interactive 3D head and skull anatomy explorer powered by Z-Anatomy." />
-  <title>Anatomy3D — Head Explorer</title>
+  <meta name="description" content="Interactive 3D head, skull, artery and vein anatomy explorer powered by Z-Anatomy." />
+  <title>Anatomy3D — Head & Vessels</title>
   <link rel="stylesheet" href="./styles.css" />
   <script type="importmap">
     {
@@ -21,31 +21,65 @@
     <header class="topbar">
       <div>
         <p class="eyebrow">Interactive anatomy</p>
-        <h1>Anatomy3D · Head Explorer</h1>
+        <h1>Anatomy3D · Head & Vessels</h1>
       </div>
-      <button id="aboutBtn" class="ghost">About</button>
+      <div class="header-actions">
+        <span class="education-note">Educational anatomy reference</span>
+        <button id="aboutBtn" class="ghost">About</button>
+      </div>
     </header>
 
     <main class="layout">
       <aside class="sidebar left-panel">
         <label class="search-wrap">
           <span>Search structures</span>
-          <input id="searchInput" type="search" placeholder="Mandible, temporal…" autocomplete="off" />
+          <input id="searchInput" type="search" placeholder="Facial artery, cavernous sinus…" autocomplete="off" />
         </label>
 
+        <section class="layer-card" aria-label="Anatomy layers">
+          <div class="section-heading compact">
+            <span>Layers</span>
+            <span class="muted-small">Head only</span>
+          </div>
+
+          <label class="layer-toggle">
+            <span class="layer-label"><i class="legend-dot bone"></i>Bones</span>
+            <input id="bonesToggle" type="checkbox" checked />
+          </label>
+          <label class="layer-toggle">
+            <span class="layer-label"><i class="legend-dot artery"></i>Arteries</span>
+            <input id="arteriesToggle" type="checkbox" checked />
+          </label>
+          <label class="layer-toggle">
+            <span class="layer-label"><i class="legend-dot vein"></i>Veins & sinuses</span>
+            <input id="veinsToggle" type="checkbox" checked />
+          </label>
+
+          <label class="range-row compact-range">
+            <span>Bone opacity <strong id="boneOpacityValue">55%</strong></span>
+            <input id="boneOpacityInput" type="range" min="0.15" max="1" value="0.55" step="0.05" />
+          </label>
+          <p id="vesselStatus" class="load-status">Vessels load after the skull so the viewer becomes usable first.</p>
+        </section>
+
         <div class="section-heading">
-          <span>Visible head structures</span>
+          <span>3D structures</span>
           <span id="structureCount" class="pill">0</span>
         </div>
         <div id="structureList" class="structure-list" aria-live="polite"></div>
+
+        <div class="section-heading guide-heading">
+          <span>Head vessel guide</span>
+        </div>
+        <div id="featuredVessels" class="featured-vessels"></div>
       </aside>
 
       <section class="viewer-shell">
-        <div id="viewer" class="viewer" aria-label="Interactive 3D anatomy viewer"></div>
+        <div id="viewer" class="viewer" aria-label="Interactive 3D head anatomy viewer"></div>
 
         <div id="loadingOverlay" class="loading-overlay">
           <div class="loader"></div>
-          <strong>Loading Z-Anatomy skeletal model</strong>
+          <strong>Loading clean head anatomy</strong>
           <span id="loadingText">Preparing 3D viewer…</span>
         </div>
 
@@ -57,13 +91,22 @@
           <button id="resetBtn">Reset</button>
         </div>
 
+        <div class="viewer-legend" aria-hidden="true">
+          <span><i class="legend-dot artery"></i>Artery</span>
+          <span><i class="legend-dot vein"></i>Vein</span>
+          <span><i class="legend-dot bone"></i>Bone</span>
+        </div>
+
         <div class="gesture-hint">Drag to rotate · Scroll/pinch to zoom · Tap a structure</div>
       </section>
 
       <aside class="sidebar right-panel">
-        <p class="eyebrow">Selected structure</p>
+        <div class="selection-heading">
+          <p class="eyebrow">Selected structure</p>
+          <span id="selectedKind" class="kind-pill" data-kind="bone">Bone</span>
+        </div>
         <h2 id="selectedName">Nothing selected</h2>
-        <p id="selectedMeta" class="muted">Tap a bone in the model or choose one from the list.</p>
+        <p id="selectedMeta" class="muted">Tap a structure in the model, choose one from the list, or open a vessel guide below.</p>
 
         <div class="actions">
           <button id="focusBtn" disabled>Focus</button>
@@ -72,14 +115,16 @@
           <button id="showAllBtn">Show all</button>
         </div>
 
-        <label class="range-row">
-          <span>Opacity</span>
-          <input id="opacityInput" type="range" min="0.15" max="1" value="1" step="0.05" />
-        </label>
+        <section class="written-info" aria-live="polite">
+          <h3>Overview</h3>
+          <p id="selectedOverview">Select an anatomical structure to see written information here.</p>
+          <div id="infoDetails"></div>
+          <p id="infoSource" class="info-source"></p>
+        </section>
 
         <div class="info-card">
-          <strong>Head-only MVP</strong>
-          <p>Explore skull and head structures from the open Z-Anatomy model. The full skeletal FBX is filtered to the head in your browser.</p>
+          <strong>Head-focused model</strong>
+          <p>Long, thin annotation/helper meshes are filtered out. Arteries are shown in red and veins/dural sinuses in blue. The vascular FBX is also filtered to the head and skull-base region.</p>
         </div>
       </aside>
     </main>
@@ -87,10 +132,11 @@
 
   <dialog id="aboutDialog">
     <button id="closeAbout" class="dialog-close" aria-label="Close">×</button>
-    <p class="eyebrow">Attribution</p>
-    <h2>Anatomy3D Head Explorer</h2>
-    <p>This prototype uses anatomy data from the open-source Z-Anatomy project. See <code>ATTRIBUTION.md</code> in this repository for licensing details.</p>
-    <p>The source skeletal model is loaded from the upstream GitHub repository at runtime and is not redistributed here.</p>
+    <p class="eyebrow">Attribution & scope</p>
+    <h2>Anatomy3D Head & Vessels</h2>
+    <p>This prototype uses the open-source Z-Anatomy skeletal and cardiovascular FBX models. The full upstream files are loaded at runtime, then filtered to the head inside your browser.</p>
+    <p>Written vessel summaries are educational reference notes based on standard anatomy sources, including NCBI Bookshelf/StatPearls. They are not medical advice.</p>
+    <p>See <code>ATTRIBUTION.md</code> in this repository for model licensing details.</p>
   </dialog>
 
   <noscript>This app requires JavaScript and WebGL.</noscript>
