@@ -7,6 +7,7 @@
   <meta name="description" content="Interactive registered 3D head, skull, artery and vein anatomy explorer using the Open Anatomy SPL Head & Neck Atlas." />
   <title>Anatomy3D — Open Anatomy Head & Vessels</title>
   <link rel="stylesheet" href="./styles.css?v=oa2" />
+  <link rel="stylesheet" href="./mobile.css?v=oa2" />
   <script type="importmap">
     {
       "imports": {
@@ -91,6 +92,12 @@
           <button id="resetBtn">Reset</button>
         </div>
 
+        <div class="mobile-layer-bar" role="toolbar" aria-label="Anatomy layers">
+          <button data-mobile-layer="bone" class="active" aria-pressed="true">Bones</button>
+          <button data-mobile-layer="artery" class="active" aria-pressed="true">Arteries</button>
+          <button data-mobile-layer="vein" class="active" aria-pressed="true">Veins</button>
+        </div>
+
         <div class="viewer-legend" aria-hidden="true">
           <span><i class="legend-dot artery"></i>Artery</span>
           <span><i class="legend-dot vein"></i>Vein</span>
@@ -141,5 +148,6 @@
 
   <noscript>This app requires JavaScript and WebGL.</noscript>
   <script type="module" src="./app.js?v=oa2"></script>
+  <script type="module" src="./mobile-layers.js?v=oa2"></script>
 </body>
 </html>
