@@ -24,6 +24,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Validate app JavaScript
+        run: |
+          node --check bodyparts-app.js
+          node --check anatomy-data.js
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
