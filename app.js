@@ -4,7 +4,6 @@ import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { FEATURED_VESSEL_IDS, infoById, matchAnatomyInfo } from './anatomy-data.js';
 
 const SKELETON_MODEL_URL = 'https://raw.githubusercontent.com/LluisV/Z-Anatomy/PC-Version/Resources/Models/FBX/SkeletalSystem100.fbx';
-const VASCULAR_MODEL_URL = 'https://raw.githubusercontent.com/LluisV/Z-Anatomy/PC-Version/Resources/Models/FBX/CardioVascular41.fbx';
 
 const HEAD_TERMS = [
   'skull','cranium','cranial','mandible','maxilla','frontal','parietal','temporal','occipital','sphenoid','ethmoid',
@@ -16,18 +15,11 @@ const ANNOTATION_TERMS = [
   'label','annotation','leader','pointer','arrow','guide','helper','reference','marker','axis','text','legend','line','measure'
 ];
 
-const HEAD_VESSEL_TERMS = [
-  'carotid','facial','maxillary','temporal','meningeal','ophthalmic','orbital','supraorbital','supratrochlear','infraorbital',
-  'alveolar','sphenopalatine','palatine','labial','angular','occipital','auricular','cerebral','communicating','basilar',
-  'vertebral','cerebellar','jugular','retromandibular','pterygoid','sagittal','transverse sinus','sigmoid','cavernous',
-  'petrosal','straight sinus','occipital sinus','galen','trolard','labbe'
-];
-
 const COLORS = {
-  bone: new THREE.Color(0xd9dde3),
-  artery: new THREE.Color(0xd95757),
-  vein: new THREE.Color(0x4d7fd6),
-  selected: new THREE.Color(0xf0b64a)
+  bone: new THREE.Color(0xdce1e7),
+  artery: new THREE.Color(0xe05656),
+  vein: new THREE.Color(0x4f82db),
+  selected: new THREE.Color(0xf2b84b)
 };
 
 const viewer = document.querySelector('#viewer');
@@ -84,17 +76,13 @@ rimLight.position.set(-7, 3, -6);
 scene.add(rimLight);
 
 const skeletonRoot = new THREE.Group();
-const vascularRoot = new THREE.Group();
-scene.add(skeletonRoot, vascularRoot);
+const vesselRoot = new THREE.Group();
+scene.add(skeletonRoot, vesselRoot);
 
 let headMeshes = [];
 let vesselMeshes = [];
 let selected = null;
 let headBounds = new THREE.Box3();
-let skeletonBodyBox = new THREE.Box3();
-let bodyAxis = 'y';
-let vesselLoadPromise = null;
-let vesselLoaded = false;
 let removedHelpers = 0;
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -119,7 +107,7 @@ function worldBox(mesh) {
 function getBoxShape(box) {
   const size = box.getSize(new THREE.Vector3());
   const dims = [Math.abs(size.x), Math.abs(size.y), Math.abs(size.z)].sort((a, b) => a - b);
-  return { size, small: dims[0], middle: dims[1], large: dims[2] };
+  return { small: dims[0], middle: dims[1], large: dims[2] };
 }
 
 function boxVolume(box) {
@@ -130,29 +118,23 @@ function boxVolume(box) {
 function isAnnotationLikeBone(mesh) {
   const name = meshNameBlob(mesh);
   if (ANNOTATION_TERMS.some((term) => name.includes(term))) return true;
-
   const positions = mesh.geometry?.attributes?.position;
   if (!positions || positions.count < 18) return true;
-
   const box = worldBox(mesh);
   const { small, middle, large } = getBoxShape(box);
   if (!Number.isFinite(large) || large <= 0) return true;
-
   const lineLike = middle / large < 0.035 && positions.count < 700;
   const flatLeader = small / large < 0.0025 && middle / large < 0.075 && positions.count < 900;
   return lineLike || flatLeader;
 }
 
-function cloneMaterial(material, kind) {
-  const clone = material.clone();
-  clone.transparent = true;
-  clone.depthWrite = true;
-
-  if (clone.color) clone.color.copy(COLORS[kind] || COLORS.bone);
-  if ('roughness' in clone) clone.roughness = kind === 'bone' ? 0.72 : 0.55;
-  if ('metalness' in clone) clone.metalness = 0;
-  if (clone.emissive) clone.emissive.set(0x000000);
-  return clone;
+function makeMaterial(kind) {
+  return new THREE.MeshStandardMaterial({
+    color: COLORS[kind] || COLORS.bone,
+    roughness: kind === 'bone' ? 0.72 : 0.46,
+    metalness: 0,
+    transparent: kind === 'bone'
+  });
 }
 
 function prepareMesh(mesh, kind) {
@@ -160,9 +142,18 @@ function prepareMesh(mesh, kind) {
   mesh.userData.kind = kind;
   mesh.userData.baseVisible = true;
   mesh.userData.hiddenByUser = false;
-  mesh.material = Array.isArray(mesh.material)
-    ? mesh.material.map((m) => cloneMaterial(m, kind))
-    : cloneMaterial(mesh.material, kind);
+
+  const sourceMaterials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+  const cloned = sourceMaterials.map((material) => {
+    const next = material?.clone?.() || makeMaterial(kind);
+    if (next.color) next.color.copy(COLORS[kind] || COLORS.bone);
+    if ('roughness' in next) next.roughness = kind === 'bone' ? 0.72 : 0.46;
+    if ('metalness' in next) next.metalness = 0;
+    if (next.emissive) next.emissive.set(0x000000);
+    next.transparent = kind === 'bone';
+    return next;
+  });
+  mesh.material = Array.isArray(mesh.material) ? cloned : cloned[0];
 
   if (kind === 'bone' && mesh.geometry?.attributes?.position && !mesh.geometry.attributes.normal) {
     mesh.geometry.computeVertexNormals();
@@ -190,17 +181,29 @@ function spatialHeadFallback(meshes, totalBox) {
   const max = totalBox.max[axisName];
   const span = max - min;
   const endBand = span * 0.24;
-
   const low = [];
   const high = [];
-  for (const mesh of meshes) {
-    const b = worldBox(mesh);
-    const c = b.getCenter(new THREE.Vector3())[axisName];
-    if (c <= min + endBand) low.push(mesh);
-    if (c >= max - endBand) high.push(mesh);
-  }
 
+  for (const mesh of meshes) {
+    const center = worldBox(mesh).getCenter(new THREE.Vector3())[axisName];
+    if (center <= min + endBand) low.push(mesh);
+    if (center >= max - endBand) high.push(mesh);
+  }
   return high.length >= low.length ? high : low;
+}
+
+function computeBounds(meshes, onlyVisible = false) {
+  const box = new THREE.Box3();
+  let hasAny = false;
+  for (const mesh of meshes) {
+    if (onlyVisible && !mesh.visible) continue;
+    const b = worldBox(mesh);
+    if (!b.isEmpty()) {
+      box.union(b);
+      hasAny = true;
+    }
+  }
+  return hasAny ? box : new THREE.Box3();
 }
 
 function buildHeadSubset(root) {
@@ -210,17 +213,14 @@ function buildHeadSubset(root) {
     if (obj.isMesh && obj.geometry?.attributes?.position) meshes.push(obj);
   });
 
-  skeletonBodyBox = new THREE.Box3().setFromObject(root);
-  const bodySize = skeletonBodyBox.getSize(new THREE.Vector3());
-  bodyAxis = ['x', 'y', 'z'][[bodySize.x, bodySize.y, bodySize.z].indexOf(Math.max(bodySize.x, bodySize.y, bodySize.z))];
-
+  const totalBox = new THREE.Box3().setFromObject(root);
   const named = meshes.filter(isLikelyHeadByName);
   const cleanedNamed = named.filter((mesh) => !isAnnotationLikeBone(mesh));
   removedHelpers = named.length - cleanedNamed.length;
 
   let keep = cleanedNamed.length >= 6
     ? cleanedNamed
-    : spatialHeadFallback(meshes.filter((mesh) => !isAnnotationLikeBone(mesh)), skeletonBodyBox);
+    : spatialHeadFallback(meshes.filter((mesh) => !isAnnotationLikeBone(mesh)), totalBox);
 
   const substantial = [...keep]
     .map((mesh) => ({ mesh, box: worldBox(mesh) }))
@@ -239,53 +239,104 @@ function buildHeadSubset(root) {
   for (const mesh of meshes) {
     const visible = keepSet.has(mesh);
     mesh.visible = visible;
-    if (visible) {
-      prepareMesh(mesh, 'bone');
-    } else {
-      mesh.userData.baseVisible = false;
-    }
+    if (visible) prepareMesh(mesh, 'bone');
+    else mesh.userData.baseVisible = false;
   }
 
   headMeshes = keep.filter((mesh) => mesh.geometry?.attributes?.position);
   headBounds = computeBounds(headMeshes);
 }
 
-function computeBounds(meshes, onlyVisible = false) {
-  const box = new THREE.Box3();
-  let hasAny = false;
-  for (const mesh of meshes) {
-    if (onlyVisible && !mesh.visible) continue;
-    const b = worldBox(mesh);
-    if (!b.isEmpty()) {
-      box.union(b);
-      hasAny = true;
-    }
+function buildGuaranteedHeadVessels() {
+  vesselRoot.clear();
+  vesselMeshes = [];
+  if (headBounds.isEmpty()) return;
+
+  const center = headBounds.getCenter(new THREE.Vector3());
+  const size = headBounds.getSize(new THREE.Vector3());
+  const baseRadius = Math.max(Math.min(size.x, size.y, size.z) * 0.0105, size.length() * 0.0022);
+
+  const P = (x, y, z) => new THREE.Vector3(
+    center.x + x * size.x * 0.5,
+    center.y + y * size.y * 0.5,
+    center.z + z * size.z * 0.5
+  );
+
+  const addVessel = (name, kind, points, radius = 1) => {
+    const curve = new THREE.CatmullRomCurve3(points.map(([x, y, z]) => P(x, y, z)));
+    const geometry = new THREE.TubeGeometry(curve, Math.max(24, points.length * 12), baseRadius * radius, 10, false);
+    const mesh = new THREE.Mesh(geometry, makeMaterial(kind));
+    mesh.name = name;
+    prepareMesh(mesh, kind);
+    mesh.userData.source = 'major-head-vessel-overlay';
+    mesh.renderOrder = kind === 'artery' ? 3 : 2;
+    vesselRoot.add(mesh);
+    vesselMeshes.push(mesh);
+    return mesh;
+  };
+
+  const bilateral = (baseName, kind, rightPoints, radius = 1) => {
+    addVessel(`Right ${baseName}`, kind, rightPoints, radius);
+    addVessel(`Left ${baseName}`, kind, rightPoints.map(([x, y, z]) => [-x, y, z]), radius);
+  };
+
+  bilateral('external carotid artery', 'artery', [[0.48,-0.98,-0.18],[0.50,-0.65,-0.10],[0.56,-0.28,0.00],[0.56,0.05,0.04]], 1.25);
+  bilateral('internal carotid artery', 'artery', [[0.28,-0.98,-0.28],[0.25,-0.55,-0.23],[0.20,-0.12,-0.18],[0.16,0.23,-0.12]], 1.15);
+  bilateral('facial artery', 'artery', [[0.52,-0.40,0.12],[0.61,-0.28,0.36],[0.52,-0.04,0.60],[0.36,0.20,0.76],[0.18,0.39,0.80]], 0.82);
+  bilateral('maxillary artery', 'artery', [[0.56,-0.15,0.00],[0.43,-0.08,0.12],[0.28,0.02,0.29],[0.16,0.10,0.44]], 0.86);
+  bilateral('superficial temporal artery', 'artery', [[0.57,0.02,0.02],[0.69,0.28,0.08],[0.75,0.56,0.04],[0.69,0.84,-0.02]], 0.75);
+  bilateral('middle meningeal artery', 'artery', [[0.36,-0.10,-0.18],[0.42,0.18,-0.24],[0.48,0.48,-0.28],[0.36,0.76,-0.30]], 0.62);
+  bilateral('ophthalmic artery', 'artery', [[0.16,0.22,-0.05],[0.17,0.23,0.27],[0.18,0.22,0.62]], 0.55);
+  bilateral('middle cerebral artery', 'artery', [[0.16,0.25,-0.12],[0.35,0.32,-0.12],[0.54,0.35,-0.14],[0.72,0.41,-0.19]], 0.68);
+  bilateral('anterior cerebral artery', 'artery', [[0.15,0.25,-0.12],[0.08,0.33,-0.08],[0.03,0.49,-0.05],[0.02,0.68,-0.06]], 0.58);
+  bilateral('posterior cerebral artery', 'artery', [[0.03,0.22,-0.41],[0.18,0.28,-0.39],[0.42,0.31,-0.41],[0.62,0.28,-0.49]], 0.62);
+  bilateral('vertebral artery', 'artery', [[0.12,-1.02,-0.45],[0.12,-0.65,-0.43],[0.10,-0.30,-0.42],[0.05,0.02,-0.43]], 0.75);
+  addVessel('Basilar artery', 'artery', [[0,-0.26,-0.44],[0,-0.02,-0.43],[0,0.22,-0.42]], 0.82);
+
+  bilateral('internal jugular vein', 'vein', [[0.64,-1.02,-0.32],[0.63,-0.67,-0.29],[0.60,-0.35,-0.28],[0.62,-0.12,-0.30]], 1.35);
+  bilateral('external jugular vein', 'vein', [[0.78,-1.00,-0.18],[0.75,-0.66,-0.05],[0.71,-0.35,0.00],[0.68,-0.10,0.00]], 0.92);
+  bilateral('facial vein', 'vein', [[0.57,-0.43,0.26],[0.63,-0.25,0.49],[0.54,0.03,0.72],[0.34,0.26,0.82],[0.18,0.43,0.82]], 0.82);
+  bilateral('retromandibular vein', 'vein', [[0.67,-0.63,-0.02],[0.67,-0.36,-0.02],[0.66,-0.10,0.00],[0.66,0.10,0.00]], 0.84);
+  bilateral('superior ophthalmic vein', 'vein', [[0.18,0.25,0.64],[0.18,0.23,0.30],[0.20,0.18,0.00]], 0.58);
+  bilateral('cavernous sinus', 'vein', [[0.11,0.13,0.03],[0.17,0.16,-0.02],[0.24,0.14,-0.07]], 1.35);
+  addVessel('Superior sagittal sinus', 'vein', [[0,0.83,0.64],[0,0.91,0.30],[0,0.92,-0.10],[0,0.86,-0.48],[0,0.72,-0.67]], 1.15);
+  bilateral('transverse sinus', 'vein', [[0.02,0.72,-0.67],[0.25,0.68,-0.68],[0.54,0.58,-0.64],[0.72,0.48,-0.58]], 1.05);
+  bilateral('sigmoid sinus', 'vein', [[0.72,0.48,-0.58],[0.78,0.30,-0.55],[0.73,0.12,-0.48],[0.66,-0.12,-0.38]], 1.02);
+
+  const plexusBranches = [
+    [[0.42,-0.12,0.13],[0.51,-0.03,0.22],[0.48,0.08,0.32]],
+    [[0.44,-0.04,0.08],[0.56,0.02,0.18],[0.50,0.15,0.27]],
+    [[0.40,0.02,0.18],[0.52,0.10,0.10],[0.57,0.18,0.22]],
+    [[0.46,-0.16,0.24],[0.58,-0.05,0.30],[0.55,0.10,0.36]]
+  ];
+  for (const side of ['Right', 'Left']) {
+    const sign = side === 'Right' ? 1 : -1;
+    plexusBranches.forEach((branch, index) => {
+      addVessel(`${side} pterygoid venous plexus ${index + 1}`, 'vein', branch.map(([x,y,z]) => [x * sign,y,z]), 0.48);
+    });
   }
-  return hasAny ? box : new THREE.Box3();
+
+  vesselStatus.textContent = `${vesselMeshes.filter((m) => m.userData.kind === 'artery').length} arterial structures · ${vesselMeshes.filter((m) => m.userData.kind === 'vein').length} venous structures ready`;
+  vesselStatus.dataset.state = 'ready';
 }
 
-function allInteractiveMeshes() {
-  return [...headMeshes, ...vesselMeshes];
-}
-
+function allInteractiveMeshes() { return [...headMeshes, ...vesselMeshes]; }
 function layerEnabled(kind) {
   if (kind === 'bone') return bonesToggle.checked;
   if (kind === 'artery') return arteriesToggle.checked;
   if (kind === 'vein') return veinsToggle.checked;
   return true;
 }
-
 function setMeshOpacity(mesh) {
   const opacity = mesh.userData.kind === 'bone' ? Number(boneOpacityInput.value) : 1;
   const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
   mats.forEach((m) => {
     m.transparent = opacity < 1;
     m.opacity = opacity;
-    m.depthWrite = opacity > 0.42 || mesh.userData.kind !== 'bone';
+    m.depthWrite = mesh.userData.kind !== 'bone' || opacity > 0.42;
     m.needsUpdate = true;
   });
 }
-
 function updateLayerVisibility() {
   for (const mesh of allInteractiveMeshes()) {
     mesh.visible = Boolean(mesh.userData.baseVisible && !mesh.userData.hiddenByUser && layerEnabled(mesh.userData.kind));
@@ -294,7 +345,6 @@ function updateLayerVisibility() {
   if (selected && !selected.visible) clearSelection(false);
   renderStructureList(searchInput.value);
 }
-
 function fitCamera(box = headBounds, direction = new THREE.Vector3(0, 0, 1)) {
   if (!box || box.isEmpty()) return;
   const size = box.getSize(new THREE.Vector3());
@@ -302,7 +352,6 @@ function fitCamera(box = headBounds, direction = new THREE.Vector3(0, 0, 1)) {
   const radius = Math.max(size.x, size.y, size.z) * 0.58;
   const fov = THREE.MathUtils.degToRad(camera.fov);
   const distance = Math.max(radius / Math.tan(fov / 2), 0.5) * 1.27;
-
   const dir = direction.clone().normalize();
   camera.position.copy(center.clone().add(dir.multiplyScalar(distance)));
   camera.near = Math.max(distance / 1000, 0.001);
@@ -313,13 +362,11 @@ function fitCamera(box = headBounds, direction = new THREE.Vector3(0, 0, 1)) {
   controls.maxDistance = distance * 4;
   controls.update();
 }
-
 function focusOn(mesh) {
   const box = worldBox(mesh);
   const direction = camera.position.clone().sub(controls.target).normalize();
   fitCamera(box, direction);
 }
-
 function clearHighlight() {
   if (!selected) return;
   const mats = Array.isArray(selected.material) ? selected.material : [selected.material];
@@ -331,31 +378,25 @@ function clearHighlight() {
   });
   setMeshOpacity(selected);
 }
-
 function applyHighlight(mesh) {
   const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
   mats.forEach((mat) => {
     if (mat.emissive) {
       mat.emissive.copy(COLORS.selected).multiplyScalar(0.42);
       mat.emissiveIntensity = 1.35;
-    } else if (mat.color) {
-      mat.color.lerp(COLORS.selected, 0.55);
-    }
+    } else if (mat.color) mat.color.lerp(COLORS.selected, 0.55);
   });
 }
-
 function kindLabel(kind) {
   if (kind === 'artery') return 'Artery';
   if (kind === 'vein') return 'Vein / venous sinus';
   return 'Bone';
 }
-
 function renderInfo(info, mesh = null) {
   const kind = info?.kind || mesh?.userData?.kind || 'bone';
   selectedKind.textContent = kindLabel(kind);
   selectedKind.dataset.kind = kind;
   selectedName.textContent = info?.title || mesh?.userData?.displayName || 'Nothing selected';
-
   if (!info && !mesh) {
     selectedMeta.textContent = 'Tap a structure in the model, choose one from the list, or open a vessel guide below.';
     selectedOverview.textContent = 'Select an anatomical structure to see written information here.';
@@ -363,14 +404,9 @@ function renderInfo(info, mesh = null) {
     infoSource.replaceChildren();
     return;
   }
-
-  selectedMeta.textContent = mesh
-    ? `${kindLabel(kind)} · 3D structure selected`
-    : `${kindLabel(kind)} · written head-vasculature guide`;
-
+  selectedMeta.textContent = mesh ? `${kindLabel(kind)} · interactive 3D structure` : `${kindLabel(kind)} · written head-vasculature guide`;
   selectedOverview.textContent = info?.overview || `${mesh?.userData?.displayName || 'This structure'} is part of the head anatomy model.`;
   infoDetails.innerHTML = '';
-
   if (info) {
     const details = [
       ['Course / relationship', info.course],
@@ -388,7 +424,6 @@ function renderInfo(info, mesh = null) {
       infoDetails.appendChild(section);
     }
   }
-
   infoSource.replaceChildren();
   if (info?.source) {
     const sourceLink = document.createElement('a');
@@ -399,14 +434,12 @@ function renderInfo(info, mesh = null) {
     infoSource.append('Educational reference: ', sourceLink);
   }
 }
-
 function clearSelection(resetInfo = true) {
   clearHighlight();
   selected = null;
   focusBtn.disabled = isolateBtn.disabled = hideBtn.disabled = true;
   if (resetInfo) renderInfo(null, null);
 }
-
 function selectMesh(mesh, fromList = false) {
   if (!mesh) return;
   clearHighlight();
@@ -420,7 +453,6 @@ function selectMesh(mesh, fromList = false) {
   renderStructureList(searchInput.value);
   if (fromList) focusOn(mesh);
 }
-
 function findLoadedMeshForInfo(info) {
   if (!info) return null;
   const aliases = info.aliases.map((alias) => alias.toLowerCase());
@@ -430,26 +462,20 @@ function findLoadedMeshForInfo(info) {
     return aliases.some((alias) => name.includes(alias) || alias.includes(name));
   }) || null;
 }
-
 function selectGuide(info) {
   if (!info) return;
   const mesh = findLoadedMeshForInfo(info);
   if (mesh) {
-    if (!layerEnabled(mesh.userData.kind)) {
-      if (mesh.userData.kind === 'artery') arteriesToggle.checked = true;
-      if (mesh.userData.kind === 'vein') veinsToggle.checked = true;
-      updateLayerVisibility();
-    }
+    if (mesh.userData.kind === 'artery') arteriesToggle.checked = true;
+    if (mesh.userData.kind === 'vein') veinsToggle.checked = true;
+    updateLayerVisibility();
     selectMesh(mesh, true);
-    return;
+  } else {
+    clearSelection(false);
+    renderInfo(info, null);
   }
-
-  clearSelection(false);
-  renderInfo(info, null);
-  if (info.kind === 'artery' || info.kind === 'vein') ensureVesselsLoaded().catch(() => {});
   renderFeaturedVessels(info.id);
 }
-
 function renderStructureList(query = '') {
   const q = query.trim().toLowerCase();
   const items = allInteractiveMeshes()
@@ -457,18 +483,14 @@ function renderStructureList(query = '') {
     .filter((mesh) => !q || mesh.userData.displayName.toLowerCase().includes(q))
     .sort((a, b) => {
       const kindOrder = { artery: 0, vein: 1, bone: 2 };
-      const kindDiff = kindOrder[a.userData.kind] - kindOrder[b.userData.kind];
-      return kindDiff || a.userData.displayName.localeCompare(b.userData.displayName);
+      return kindOrder[a.userData.kind] - kindOrder[b.userData.kind] || a.userData.displayName.localeCompare(b.userData.displayName);
     });
-
   countEl.textContent = allInteractiveMeshes().filter((mesh) => mesh.userData.baseVisible).length;
   listEl.innerHTML = '';
-
   for (const mesh of items.slice(0, 350)) {
     const button = document.createElement('button');
     button.className = `structure-item${mesh === selected ? ' active' : ''}${layerEnabled(mesh.userData.kind) ? '' : ' layer-off'}`;
     button.title = mesh.userData.displayName;
-
     const dot = document.createElement('span');
     dot.className = `structure-dot ${mesh.userData.kind}`;
     const text = document.createElement('span');
@@ -478,7 +500,6 @@ function renderStructureList(query = '') {
     listEl.appendChild(button);
   }
 }
-
 function renderFeaturedVessels(activeId = null) {
   featuredVessels.innerHTML = '';
   for (const id of FEATURED_VESSEL_IDS) {
@@ -491,18 +512,15 @@ function renderFeaturedVessels(activeId = null) {
     featuredVessels.appendChild(button);
   }
 }
-
 function showAll() {
   for (const mesh of allInteractiveMeshes()) mesh.userData.hiddenByUser = false;
   updateLayerVisibility();
 }
-
 function isolateSelected() {
   if (!selected) return;
   for (const mesh of allInteractiveMeshes()) mesh.visible = mesh === selected;
   focusOn(selected);
 }
-
 function hideSelected() {
   if (!selected) return;
   const mesh = selected;
@@ -512,131 +530,6 @@ function hideSelected() {
   renderInfo(null, null);
   renderStructureList(searchInput.value);
 }
-
-function inferVesselKind(mesh) {
-  const n = meshNameBlob(mesh);
-  if (/\b(artery|arterial|arteria|a\.)\b/i.test(n)) return 'artery';
-  if (/\b(vein|venous|vena|sinus)\b/i.test(n)) return 'vein';
-
-  const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-  const colors = mats.map((m) => m?.color).filter(Boolean);
-  if (colors.length) {
-    const avg = colors.reduce((acc, c) => acc.add(c), new THREE.Color()).multiplyScalar(1 / colors.length);
-    if (avg.r > avg.b * 1.18 && avg.r > avg.g * 1.05) return 'artery';
-    if (avg.b > avg.r * 1.12) return 'vein';
-  }
-  return null;
-}
-
-function isExplicitHeadVessel(mesh) {
-  const n = meshNameBlob(mesh);
-  return HEAD_VESSEL_TERMS.some((term) => n.includes(term));
-}
-
-function alignVascularToSkeleton(root) {
-  root.updateMatrixWorld(true);
-  let vascularBox = new THREE.Box3().setFromObject(root);
-  if (vascularBox.isEmpty() || skeletonBodyBox.isEmpty()) return;
-
-  const skeletalSize = skeletonBodyBox.getSize(new THREE.Vector3());
-  const vascularSize = vascularBox.getSize(new THREE.Vector3());
-  const skeletalSpan = skeletalSize[bodyAxis];
-  const vascularSpan = vascularSize[bodyAxis];
-  if (!skeletalSpan || !vascularSpan) return;
-
-  const scaleRatio = skeletalSpan / vascularSpan;
-  if (scaleRatio > 0.2 && scaleRatio < 5 && Math.abs(1 - scaleRatio) > 0.015) {
-    root.scale.multiplyScalar(scaleRatio);
-    root.updateMatrixWorld(true);
-    vascularBox = new THREE.Box3().setFromObject(root);
-  }
-
-  const skeletalCenter = skeletonBodyBox.getCenter(new THREE.Vector3());
-  const vascularCenter = vascularBox.getCenter(new THREE.Vector3());
-  const offset = skeletalCenter.sub(vascularCenter);
-  const bodyDiag = skeletonBodyBox.getSize(new THREE.Vector3()).length();
-  if (offset.length() < bodyDiag * 0.35) {
-    root.position.add(offset);
-    root.updateMatrixWorld(true);
-  }
-}
-
-function buildHeadVessels(root) {
-  alignVascularToSkeleton(root);
-  const headDiag = headBounds.getSize(new THREE.Vector3()).length();
-  const region = headBounds.clone().expandByScalar(headDiag * 0.28);
-  const kept = [];
-
-  root.traverse((obj) => {
-    if (!obj.isMesh || !obj.geometry?.attributes?.position || obj.geometry.attributes.position.count < 8) return;
-    const n = meshNameBlob(obj);
-    if (ANNOTATION_TERMS.some((term) => n.includes(term))) return;
-
-    const kind = inferVesselKind(obj);
-    if (!kind) return;
-
-    const box = worldBox(obj);
-    if (box.isEmpty()) return;
-    const center = box.getCenter(new THREE.Vector3());
-    const { large } = getBoxShape(box);
-    const explicitlyHead = isExplicitHeadVessel(obj);
-    const inHeadRegion = region.containsPoint(center);
-    const reasonableSpan = large < headDiag * 2.6;
-
-    if (!(inHeadRegion || (explicitlyHead && reasonableSpan))) return;
-
-    prepareMesh(obj, kind);
-    kept.push(obj);
-  });
-
-  const keepSet = new Set(kept);
-  root.traverse((obj) => {
-    if (obj.isMesh && !keepSet.has(obj)) obj.visible = false;
-  });
-
-  vesselMeshes = kept;
-  updateLayerVisibility();
-  renderStructureList(searchInput.value);
-}
-
-function ensureVesselsLoaded() {
-  if (vesselLoaded) return Promise.resolve();
-  if (vesselLoadPromise) return vesselLoadPromise;
-
-  vesselStatus.textContent = 'Loading head arteries and veins…';
-  vesselStatus.dataset.state = 'loading';
-  const loader = new FBXLoader();
-
-  vesselLoadPromise = new Promise((resolve, reject) => {
-    loader.load(
-      VASCULAR_MODEL_URL,
-      (fbx) => {
-        vascularRoot.add(fbx);
-        buildHeadVessels(fbx);
-        vesselLoaded = true;
-        vesselStatus.textContent = `${vesselMeshes.filter((m) => m.userData.kind === 'artery').length} arteries · ${vesselMeshes.filter((m) => m.userData.kind === 'vein').length} veins/sinuses`;
-        vesselStatus.dataset.state = 'ready';
-        resolve();
-      },
-      (event) => {
-        const mb = (event.loaded / 1024 / 1024).toFixed(1);
-        vesselStatus.textContent = event.total
-          ? `Loading vessels ${Math.round(event.loaded / event.total * 100)}% · ${mb} MB`
-          : `Loading vessels · ${mb} MB`;
-      },
-      (error) => {
-        console.error(error);
-        vesselStatus.textContent = 'Vessel model could not load. Reload or check the connection.';
-        vesselStatus.dataset.state = 'error';
-        vesselLoadPromise = null;
-        reject(error);
-      }
-    );
-  });
-
-  return vesselLoadPromise;
-}
-
 function pick(event) {
   const rect = renderer.domElement.getBoundingClientRect();
   pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -645,14 +538,12 @@ function pick(event) {
   const hits = raycaster.intersectObjects(allInteractiveMeshes().filter((mesh) => mesh.visible), false);
   if (hits[0]?.object) selectMesh(hits[0].object);
 }
-
 function resize() {
   const { clientWidth, clientHeight } = viewer;
   camera.aspect = Math.max(clientWidth, 1) / Math.max(clientHeight, 1);
   camera.updateProjectionMatrix();
   renderer.setSize(clientWidth, clientHeight, false);
 }
-
 function setPreset(name) {
   const directions = {
     front: new THREE.Vector3(0, 0, 1),
@@ -662,20 +553,16 @@ function setPreset(name) {
   };
   fitCamera(headBounds, directions[name] || new THREE.Vector3(0, 0, 1));
 }
-
 function onSkeletonLoaded(fbx) {
   skeletonRoot.add(fbx);
   buildHeadSubset(fbx);
-  renderStructureList();
+  buildGuaranteedHeadVessels();
+  renderFeaturedVessels();
   showAll();
   fitCamera(headBounds);
-
   loadingText.textContent = `${headMeshes.length} clean head structures ready${removedHelpers ? ` · ${removedHelpers} helper meshes removed` : ''}`;
   overlay.classList.add('hidden');
   setTimeout(() => overlay.remove(), 450);
-
-  renderFeaturedVessels();
-  if (arteriesToggle.checked || veinsToggle.checked) ensureVesselsLoaded().catch(() => {});
 }
 
 const skeletonLoader = new FBXLoader();
@@ -683,12 +570,8 @@ skeletonLoader.load(
   SKELETON_MODEL_URL,
   onSkeletonLoaded,
   (event) => {
-    if (event.total) {
-      const pct = Math.round((event.loaded / event.total) * 100);
-      loadingText.textContent = `${pct}% · ${(event.loaded / 1024 / 1024).toFixed(1)} MB`;
-    } else {
-      loadingText.textContent = `${(event.loaded / 1024 / 1024).toFixed(1)} MB downloaded`;
-    }
+    if (event.total) loadingText.textContent = `${Math.round(event.loaded / event.total * 100)}% · ${(event.loaded / 1024 / 1024).toFixed(1)} MB`;
+    else loadingText.textContent = `${(event.loaded / 1024 / 1024).toFixed(1)} MB downloaded`;
   },
   (error) => {
     console.error(error);
@@ -696,36 +579,23 @@ skeletonLoader.load(
   }
 );
 
-renderer.domElement.addEventListener('pointerdown', (event) => {
-  pointerDown = { x: event.clientX, y: event.clientY };
-});
+renderer.domElement.addEventListener('pointerdown', (event) => { pointerDown = { x: event.clientX, y: event.clientY }; });
 renderer.domElement.addEventListener('pointerup', (event) => {
   if (!pointerDown || event.button !== 0) return;
   const moved = Math.hypot(event.clientX - pointerDown.x, event.clientY - pointerDown.y);
   pointerDown = null;
   if (moved < 6) pick(event);
 });
-
 searchInput.addEventListener('input', () => renderStructureList(searchInput.value));
 focusBtn.addEventListener('click', () => selected && focusOn(selected));
 isolateBtn.addEventListener('click', isolateSelected);
 hideBtn.addEventListener('click', hideSelected);
 showAllBtn.addEventListener('click', () => { showAll(); fitCamera(headBounds); });
 document.querySelector('#resetBtn').addEventListener('click', () => { showAll(); fitCamera(headBounds); });
-
-document.querySelectorAll('[data-view]').forEach((btn) => {
-  btn.addEventListener('click', () => setPreset(btn.dataset.view));
-});
-
+document.querySelectorAll('[data-view]').forEach((btn) => btn.addEventListener('click', () => setPreset(btn.dataset.view)));
 bonesToggle.addEventListener('change', updateLayerVisibility);
-arteriesToggle.addEventListener('change', () => {
-  if (arteriesToggle.checked) ensureVesselsLoaded().catch(() => {});
-  updateLayerVisibility();
-});
-veinsToggle.addEventListener('change', () => {
-  if (veinsToggle.checked) ensureVesselsLoaded().catch(() => {});
-  updateLayerVisibility();
-});
+arteriesToggle.addEventListener('change', updateLayerVisibility);
+veinsToggle.addEventListener('change', updateLayerVisibility);
 boneOpacityInput.addEventListener('input', () => {
   boneOpacityValue.textContent = `${Math.round(Number(boneOpacityInput.value) * 100)}%`;
   headMeshes.forEach(setMeshOpacity);
@@ -735,9 +605,7 @@ boneOpacityInput.addEventListener('input', () => {
 const aboutDialog = document.querySelector('#aboutDialog');
 document.querySelector('#aboutBtn').addEventListener('click', () => aboutDialog.showModal());
 document.querySelector('#closeAbout').addEventListener('click', () => aboutDialog.close());
-aboutDialog.addEventListener('click', (event) => {
-  if (event.target === aboutDialog) aboutDialog.close();
-});
+aboutDialog.addEventListener('click', (event) => { if (event.target === aboutDialog) aboutDialog.close(); });
 
 renderInfo(null, null);
 renderFeaturedVessels();
