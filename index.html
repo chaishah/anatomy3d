@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b0f14" />
-  <meta name="description" content="Interactive registered 3D head, skull, artery and vein anatomy explorer using the Open Anatomy SPL Head & Neck Atlas." />
-  <title>Anatomy3D — Open Anatomy Head & Vessels</title>
-  <link rel="stylesheet" href="./styles.css?v=oa2" />
-  <link rel="stylesheet" href="./mobile.css?v=oa2" />
+  <meta name="theme-color" content="#0a0e14" />
+  <meta name="description" content="Detailed interactive 3D head anatomy explorer using BodyParts3D v4.3 meshes." />
+  <title>Anatomy3D — Detailed BodyParts3D Head Atlas</title>
+  <link rel="stylesheet" href="./bodyparts.css?v=bp43-2" />
   <script type="importmap">
     {
       "imports": {
@@ -21,11 +20,11 @@
   <div id="app">
     <header class="topbar">
       <div>
-        <p class="eyebrow">Open Anatomy SPL atlas</p>
-        <h1>Anatomy3D · Head & Vessels</h1>
+        <p class="eyebrow">BodyParts3D v4.3</p>
+        <h1>Anatomy3D · Detailed Head Atlas</h1>
       </div>
       <div class="header-actions">
-        <span class="education-note">Registered atlas geometry</span>
+        <span class="education-note">FMA-mapped anatomical meshes</span>
         <button id="aboutBtn" class="ghost">About</button>
       </div>
     </header>
@@ -33,106 +32,51 @@
     <main class="layout">
       <aside class="sidebar left-panel">
         <label class="search-wrap">
-          <span>Search atlas structures</span>
-          <input id="searchInput" type="search" placeholder="Carotid, jugular, mandible…" autocomplete="off" />
+          <span>Search all head structures</span>
+          <input id="searchInput" type="search" placeholder="Facial artery, trigeminal, FMA…" autocomplete="off" />
         </label>
 
-        <section class="layer-card" aria-label="Anatomy layers">
-          <div class="section-heading compact">
-            <span>Layers</span>
-            <span class="muted-small">Registered together</span>
-          </div>
-
-          <label class="layer-toggle">
-            <span class="layer-label"><i class="legend-dot bone"></i>Bones</span>
-            <input id="bonesToggle" type="checkbox" checked />
-          </label>
-          <label class="layer-toggle">
-            <span class="layer-label"><i class="legend-dot artery"></i>Arteries</span>
-            <input id="arteriesToggle" type="checkbox" checked />
-          </label>
-          <label class="layer-toggle">
-            <span class="layer-label"><i class="legend-dot vein"></i>Veins</span>
-            <input id="veinsToggle" type="checkbox" checked />
-          </label>
-
-          <label class="range-row compact-range">
-            <span>Bone opacity <strong id="boneOpacityValue">45%</strong></span>
-            <input id="boneOpacityInput" type="range" min="0.15" max="1" value="0.45" step="0.05" />
-          </label>
-          <p id="vesselStatus" class="load-status">Loading the registered SPL Head & Neck atlas assets…</p>
+        <section class="layer-card" aria-label="Detailed anatomy layers">
+          <div class="section-heading compact"><span>Systems</span><span class="muted-small">Lazy loaded</span></div>
+          <label class="layer-toggle" data-layer-row="bone"><span class="layer-label"><i class="legend-dot bone"></i>Bones & teeth</span><input id="boneToggle" type="checkbox" checked /></label>
+          <label class="layer-toggle" data-layer-row="artery"><span class="layer-label"><i class="legend-dot artery"></i>Arteries</span><input id="arteryToggle" type="checkbox" checked /></label>
+          <label class="layer-toggle" data-layer-row="vein"><span class="layer-label"><i class="legend-dot vein"></i>Veins & sinuses</span><input id="veinToggle" type="checkbox" checked /></label>
+          <label class="layer-toggle" data-layer-row="nerve"><span class="layer-label"><i class="legend-dot nerve"></i>Nerves</span><input id="nerveToggle" type="checkbox" /></label>
+          <label class="layer-toggle" data-layer-row="muscle"><span class="layer-label"><i class="legend-dot muscle"></i>Muscles</span><input id="muscleToggle" type="checkbox" /></label>
+          <label class="layer-toggle" data-layer-row="organ"><span class="layer-label"><i class="legend-dot organ"></i>Brain, eye & organs</span><input id="organToggle" type="checkbox" /></label>
+          <label class="range-row compact-range"><span>Bone opacity <strong id="boneOpacityValue">42%</strong></span><input id="boneOpacityInput" type="range" min="0.10" max="1" value="0.42" step="0.04" /></label>
+          <p id="vesselStatus" class="load-status">Loading detailed BodyParts3D atlas…</p>
         </section>
 
-        <div class="section-heading">
-          <span>3D structures</span>
-          <span id="structureCount" class="pill">0</span>
-        </div>
+        <div class="section-heading"><span>Atlas structures</span><span id="structureCount" class="pill">0</span></div>
         <div id="structureList" class="structure-list" aria-live="polite"></div>
-
-        <div class="section-heading guide-heading">
-          <span>Vessels represented in atlas</span>
-        </div>
+        <div class="section-heading guide-heading"><span>Key head vessels</span></div>
         <div id="featuredVessels" class="featured-vessels"></div>
       </aside>
 
       <section class="viewer-shell">
-        <div id="viewer" class="viewer" aria-label="Interactive registered 3D head anatomy viewer"></div>
-
-        <div id="loadingOverlay" class="loading-overlay">
-          <div class="loader"></div>
-          <strong>Loading Open Anatomy head atlas</strong>
-          <span id="loadingText">Preparing registered skull…</span>
+        <div id="viewer" class="viewer" aria-label="Interactive detailed BodyParts3D head anatomy viewer"></div>
+        <div id="loadingOverlay" class="loading-overlay"><div class="loader"></div><strong>Loading BodyParts3D head atlas</strong><span id="loadingText">Reading detailed anatomy manifest…</span></div>
+        <div class="viewer-toolbar" role="toolbar" aria-label="Camera controls"><button data-view="front">Front</button><button data-view="left">Left</button><button data-view="right">Right</button><button data-view="back">Back</button><button id="resetBtn">Reset</button></div>
+        <div class="mobile-layer-bar" role="toolbar" aria-label="Anatomy systems">
+          <button data-mobile-layer="bone" class="active" aria-pressed="true"><i class="legend-dot bone"></i>Bone</button>
+          <button data-mobile-layer="artery" class="active" aria-pressed="true"><i class="legend-dot artery"></i>Art.</button>
+          <button data-mobile-layer="vein" class="active" aria-pressed="true"><i class="legend-dot vein"></i>Vein</button>
+          <button data-mobile-layer="nerve" aria-pressed="false"><i class="legend-dot nerve"></i>Nerve</button>
+          <button data-mobile-layer="muscle" aria-pressed="false"><i class="legend-dot muscle"></i>Muscle</button>
+          <button data-mobile-layer="organ" aria-pressed="false"><i class="legend-dot organ"></i>Brain</button>
         </div>
-
-        <div class="viewer-toolbar" role="toolbar" aria-label="Camera controls">
-          <button data-view="front">Front</button>
-          <button data-view="left">Left</button>
-          <button data-view="right">Right</button>
-          <button data-view="back">Back</button>
-          <button id="resetBtn">Reset</button>
-        </div>
-
-        <div class="mobile-layer-bar" role="toolbar" aria-label="Anatomy layers">
-          <button data-mobile-layer="bone" class="active" aria-pressed="true">Bones</button>
-          <button data-mobile-layer="artery" class="active" aria-pressed="true">Arteries</button>
-          <button data-mobile-layer="vein" class="active" aria-pressed="true">Veins</button>
-        </div>
-
-        <div class="viewer-legend" aria-hidden="true">
-          <span><i class="legend-dot artery"></i>Artery</span>
-          <span><i class="legend-dot vein"></i>Vein</span>
-          <span><i class="legend-dot bone"></i>Bone</span>
-        </div>
-
+        <div class="viewer-legend" aria-hidden="true"><span><i class="legend-dot artery"></i>Artery</span><span><i class="legend-dot vein"></i>Vein</span><span><i class="legend-dot nerve"></i>Nerve</span><span><i class="legend-dot bone"></i>Bone</span></div>
         <div class="gesture-hint">Drag to rotate · Scroll/pinch to zoom · Tap a structure</div>
       </section>
 
       <aside class="sidebar right-panel">
-        <div class="selection-heading">
-          <p class="eyebrow">Selected structure</p>
-          <span id="selectedKind" class="kind-pill" data-kind="bone">Bone</span>
-        </div>
+        <div class="selection-heading"><p class="eyebrow">Selected structure</p><span id="selectedKind" class="kind-pill" data-kind="bone">Bones & teeth</span></div>
         <h2 id="selectedName">Nothing selected</h2>
-        <p id="selectedMeta" class="muted">Tap a structure in the model or choose one from the list.</p>
-
-        <div class="actions">
-          <button id="focusBtn" disabled>Focus</button>
-          <button id="isolateBtn" disabled>Isolate</button>
-          <button id="hideBtn" disabled>Hide</button>
-          <button id="showAllBtn">Show all</button>
-        </div>
-
-        <section class="written-info" aria-live="polite">
-          <h3>Overview</h3>
-          <p id="selectedOverview">Select a registered Open Anatomy structure to see written information here.</p>
-          <div id="infoDetails"></div>
-          <p id="infoSource" class="info-source"></p>
-        </section>
-
-        <div class="info-card">
-          <strong>Actual atlas geometry</strong>
-          <p>Bones, arteries and veins come from the same SPL Head & Neck atlas coordinate system. No procedural vessel curves or browser-side alignment guesses are used.</p>
-        </div>
+        <p id="selectedMeta" class="muted">Select a detailed BodyParts3D structure.</p>
+        <div class="actions"><button id="focusBtn" disabled>Focus</button><button id="isolateBtn" disabled>Isolate</button><button id="hideBtn" disabled>Hide</button><button id="showAllBtn">Show all</button></div>
+        <section class="written-info" aria-live="polite"><h3>Overview</h3><p id="selectedOverview">Search the atlas or tap a structure to see its anatomical and source information.</p><div id="infoDetails"></div><p id="infoSource" class="info-source"></p></section>
+        <div class="info-card"><strong>Detailed shared-coordinate atlas</strong><p>All systems use BodyParts3D coordinates. Vessels and nerves are real atlas meshes, not procedurally drawn, and heavier systems load only when enabled.</p></div>
       </aside>
     </main>
   </div>
@@ -140,14 +84,14 @@
   <dialog id="aboutDialog">
     <button id="closeAbout" class="dialog-close" aria-label="Close">×</button>
     <p class="eyebrow">Source & scope</p>
-    <h2>Open Anatomy SPL Head & Neck</h2>
-    <p>This version uses registered meshes from the Open Anatomy SPL Head & Neck Atlas. The source Slicer/MRML scene is converted once into compact GLB assets while preserving model transforms and anatomical registration.</p>
-    <p>3D Slicer is not required in the browser. It remains compatible with the source atlas for authoring and inspection, while the website uses optimized web-native GLB files for smoother interaction.</p>
-    <p>The atlas is an educational anatomical reference, not patient-specific imaging or medical advice. See <code>ATTRIBUTION.md</code> and the generated atlas manifest for source and modification details.</p>
+    <h2>BodyParts3D Detailed Head Atlas</h2>
+    <p>This version uses detailed BodyParts3D / Anatomography v4.3 component meshes for head bones, teeth, arteries, veins, nerves, muscles, brain, eye and related structures.</p>
+    <p>The source geometry shares one atlas coordinate system. It is converted once to the Three.js coordinate basis and split into lazy-loaded web layers, preserving FJ and FMA identifiers for each selectable mesh.</p>
+    <p>BodyParts3D data is attributed to the Database Center for Life Science. See <code>ATTRIBUTION.md</code> and <code>assets/bodyparts3d/manifest.json</code> for source, license and modification details.</p>
+    <p>This application is an educational anatomy reference and is not diagnostic or patient-specific.</p>
   </dialog>
 
   <noscript>This app requires JavaScript and WebGL.</noscript>
-  <script type="module" src="./app.js?v=oa2"></script>
-  <script type="module" src="./mobile-layers.js?v=oa2"></script>
+  <script type="module" src="./bodyparts-app.js?v=bp43-2"></script>
 </body>
 </html>
