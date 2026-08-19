@@ -1,0 +1,19 @@
+{
+  "built": {
+    "artery": 435,
+    "bone": 80,
+    "muscle": 63,
+    "nerve": 165,
+    "organ": 155,
+    "vein": 66
+  },
+  "selected": {
+    "artery": 435,
+    "bone": 80,
+    "muscle": 63,
+    "nerve": 165,
+    "organ": 155,
+    "vein": 66
+  },
+  "warnings": {}
+}
