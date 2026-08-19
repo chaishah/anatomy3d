@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f14" />
+  <meta name="description" content="Interactive 3D head and skull anatomy explorer powered by Z-Anatomy." />
+  <title>Anatomy3D — Head Explorer</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.179.1/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Interactive anatomy</p>
+        <h1>Anatomy3D · Head Explorer</h1>
+      </div>
+      <button id="aboutBtn" class="ghost">About</button>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar left-panel">
+        <label class="search-wrap">
+          <span>Search structures</span>
+          <input id="searchInput" type="search" placeholder="Mandible, temporal…" autocomplete="off" />
+        </label>
+
+        <div class="section-heading">
+          <span>Visible head structures</span>
+          <span id="structureCount" class="pill">0</span>
+        </div>
+        <div id="structureList" class="structure-list" aria-live="polite"></div>
+      </aside>
+
+      <section class="viewer-shell">
+        <div id="viewer" class="viewer" aria-label="Interactive 3D anatomy viewer"></div>
+
+        <div id="loadingOverlay" class="loading-overlay">
+          <div class="loader"></div>
+          <strong>Loading Z-Anatomy skeletal model</strong>
+          <span id="loadingText">Preparing 3D viewer…</span>
+        </div>
+
+        <div class="viewer-toolbar" role="toolbar" aria-label="Camera controls">
+          <button data-view="front">Front</button>
+          <button data-view="left">Left</button>
+          <button data-view="right">Right</button>
+          <button data-view="back">Back</button>
+          <button id="resetBtn">Reset</button>
+        </div>
+
+        <div class="gesture-hint">Drag to rotate · Scroll/pinch to zoom · Tap a structure</div>
+      </section>
+
+      <aside class="sidebar right-panel">
+        <p class="eyebrow">Selected structure</p>
+        <h2 id="selectedName">Nothing selected</h2>
+        <p id="selectedMeta" class="muted">Tap a bone in the model or choose one from the list.</p>
+
+        <div class="actions">
+          <button id="focusBtn" disabled>Focus</button>
+          <button id="isolateBtn" disabled>Isolate</button>
+          <button id="hideBtn" disabled>Hide</button>
+          <button id="showAllBtn">Show all</button>
+        </div>
+
+        <label class="range-row">
+          <span>Opacity</span>
+          <input id="opacityInput" type="range" min="0.15" max="1" value="1" step="0.05" />
+        </label>
+
+        <div class="info-card">
+          <strong>Head-only MVP</strong>
+          <p>Explore skull and head structures from the open Z-Anatomy model. The full skeletal FBX is filtered to the head in your browser.</p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <dialog id="aboutDialog">
+    <button id="closeAbout" class="dialog-close" aria-label="Close">×</button>
+    <p class="eyebrow">Attribution</p>
+    <h2>Anatomy3D Head Explorer</h2>
+    <p>This prototype uses anatomy data from the open-source Z-Anatomy project. See <code>ATTRIBUTION.md</code> in this repository for licensing details.</p>
+    <p>The source skeletal model is loaded from the upstream GitHub repository at runtime and is not redistributed here.</p>
+  </dialog>
+
+  <noscript>This app requires JavaScript and WebGL.</noscript>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
