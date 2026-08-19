@@ -8,13 +8,18 @@ on:
     paths:
       - tools/build_openanatomy_assets.py
       - .github/workflows/build-openanatomy-assets.yml
+  pull_request:
+    branches: [main]
+    paths:
+      - tools/build_openanatomy_assets.py
+      - .github/workflows/build-openanatomy-assets.yml
 
 permissions:
   contents: write
 
 concurrency:
-  group: openanatomy-assets
-  cancel-in-progress: false
+  group: openanatomy-assets-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -47,8 +52,17 @@ jobs:
           python -m json.tool assets/openanatomy/manifest.json >/dev/null
           ls -lh assets/openanatomy
 
-      - name: Commit generated assets or diagnostic report
+      - name: Upload build output for validation
         if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openanatomy-build
+          path: assets/openanatomy
+          if-no-files-found: warn
+          retention-days: 3
+
+      - name: Commit generated assets or diagnostic report
+        if: always() && github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
