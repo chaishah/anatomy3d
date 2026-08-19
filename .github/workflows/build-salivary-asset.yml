@@ -1,0 +1,82 @@
+name: Build BodyParts3D salivary study asset
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - tools/extract_salivary_asset.py
+      - assets/bodyparts3d/head-organs.glb
+      - .github/workflows/build-salivary-asset.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: bodyparts3d-salivary
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install mesh tooling
+        run: python -m pip install --upgrade numpy trimesh
+
+      - name: Extract salivary study GLB
+        run: python tools/extract_salivary_asset.py
+
+      - name: Validate salivary asset
+        run: |
+          test -s assets/bodyparts3d/head-salivary.glb
+          python -m json.tool assets/bodyparts3d/salivary-manifest.json >/dev/null
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path('assets/bodyparts3d/salivary-manifest.json').read_text())
+          required={'FJ2765','FJ2766','FJ2767','FJ2768'}
+          assert required <= set(m['selectedFJ'])
+          print('salivary components:', m['selectedFJ'])
+          print('bytes:', m['bytes'])
+          PY
+
+      - name: Commit generated salivary asset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/bodyparts3d/head-salivary.glb assets/bodyparts3d/salivary-manifest.json
+          if git diff --cached --quiet; then
+            echo "Salivary asset already current."
+          else
+            git commit -m "Build lightweight BodyParts3D salivary asset"
+            git push
+          fi
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload generated checkout to Pages
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy generated site
+        id: deployment
+        uses: actions/deploy-pages@v4
