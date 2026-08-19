@@ -1,23 +1,27 @@
-# Anatomy3D — Head Explorer
+# Anatomy3D — Head & Vessels
 
-A static, mobile-friendly interactive 3D head/skull anatomy prototype built for GitHub Pages using Three.js and Z-Anatomy data.
+A static, mobile-friendly interactive 3D head anatomy explorer built for GitHub Pages using Three.js and Z-Anatomy data.
 
 ## Current features
 
-- Loads the upstream Z-Anatomy skeletal FBX in-browser.
-- Filters the scene down to skull/head structures.
+- Loads the upstream Z-Anatomy skeletal FBX and filters it to the head.
+- Removes annotation/helper-like long thin meshes to keep the skull view clean.
+- Loads the upstream Z-Anatomy cardiovascular FBX after the skull and filters it to the head/skull-base region.
+- Separate layers for bones, arteries and veins/dural venous sinuses.
+- Standardized vessel colours: arteries red, veins/sinuses blue, bones neutral.
+- Adjustable bone opacity so vessels remain visible through the skull.
 - Rotate, zoom and pan with mouse/touch.
 - Click/tap structures to identify and highlight them.
-- Search visible structures on desktop.
+- Search loaded 3D structures.
 - Focus, isolate, hide and restore structures.
-- Adjust opacity.
-- Front, left, right and back camera presets.
-- Responsive mobile layout.
+- Written anatomy information for major head arteries, veins, dural sinuses and key skull structures.
+- Head-vessel study shortcuts for important vessels such as the facial artery, maxillary artery, internal jugular vein and cavernous sinus.
+- Responsive desktop/mobile layout.
 - No backend and no database.
 
 ## Live site
 
-Once GitHub Pages is enabled for this repository with **GitHub Actions** as its publishing source, the site is deployed automatically by `.github/workflows/pages.yml`.
+GitHub Pages deploys automatically from `main` through `.github/workflows/pages.yml` when Pages is configured to use GitHub Actions.
 
 Expected URL:
 
@@ -25,23 +29,29 @@ Expected URL:
 
 ## Architecture
 
-This MVP intentionally uses a build-free static architecture:
+The app intentionally remains build-free and static:
 
 - HTML/CSS/JavaScript
 - Three.js via jsDelivr
-- Z-Anatomy `SkeletalSystem100.fbx` loaded from the upstream GitHub repository
+- Z-Anatomy `SkeletalSystem100.fbx` loaded from upstream
+- Z-Anatomy `CardioVascular41.fbx` loaded from upstream
 - GitHub Pages hosting
 
 ## Performance note
 
-The current proof of concept downloads the full upstream skeletal FBX (about 41 MB) and filters it client-side. This validates the interaction model quickly, but it is not the final performance architecture.
+This proof of concept still downloads the full upstream skeletal and cardiovascular FBX files and filters them client-side. The skull becomes usable first; the larger cardiovascular model loads afterward.
 
-The next production step should extract only the head/skull meshes into a compressed `.glb` asset and host that optimized model with this repository.
+The production optimization should extract only the selected head bones and head vessels into compressed GLB assets. That will reduce transfer size substantially and also allow tighter control over naming, vessel grouping and geometry cleanup.
+
+## Educational information
+
+The written anatomy summaries are short educational reference notes based on standard anatomy sources, including NCBI Bookshelf/StatPearls. Source links are shown in the app for the corresponding structures. They are not medical advice.
 
 ## Source and licensing
 
-Upstream model path:
+Upstream model paths:
 
-`LluisV/Z-Anatomy/Resources/Models/FBX/SkeletalSystem100.fbx`
+- `LluisV/Z-Anatomy/Resources/Models/FBX/SkeletalSystem100.fbx`
+- `LluisV/Z-Anatomy/Resources/Models/FBX/CardioVascular41.fbx`
 
-See `ATTRIBUTION.md` before redistributing any extracted model assets.
+See `ATTRIBUTION.md` before redistributing extracted model assets.
