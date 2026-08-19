@@ -6,17 +6,33 @@ import { FEATURED_VESSEL_IDS, infoById, matchAnatomyInfo } from './anatomy-data.
 const ASSET_BASE = './assets/bodyparts3d/';
 const MANIFEST_URL = `${ASSET_BASE}manifest.json`;
 const BODY_PARTS_PAGE = 'https://dbarchive.biosciencedbc.jp/en/bodyparts3d/';
+const SUBMANDIBULAR_SOURCE = 'https://www.ncbi.nlm.nih.gov/books/NBK542272/';
+const SUBLINGUAL_SOURCE = 'https://www.ncbi.nlm.nih.gov/books/NBK535426/';
+
+let boneOpacity = 0.42;
+let studyMode = null;
 
 const LAYERS = {
-  bone:   { file: 'head-bones.glb', label: 'Bones & teeth', color: 0xe2dccb, defaultOn: true, opacity: () => Number(document.querySelector('#boneOpacityInput').value) },
+  bone:   { file: 'head-bones.glb', label: 'Bones & teeth', color: 0xe2dccb, defaultOn: true, opacity: () => boneOpacity },
   artery: { file: 'head-arteries.glb', label: 'Arteries', color: 0xe34d4d, defaultOn: true, opacity: () => 1 },
   vein:   { file: 'head-veins.glb', label: 'Veins & sinuses', color: 0x4e7fdb, defaultOn: true, opacity: () => 1 },
   nerve:  { file: 'head-nerves.glb', label: 'Nerves', color: 0xf0bf3f, defaultOn: false, opacity: () => 1 },
   muscle: { file: 'head-muscles.glb', label: 'Muscles', color: 0xa94c52, defaultOn: false, opacity: () => 0.76 },
   organ:  { file: 'head-organs.glb', label: 'Brain & organs', color: 0xb37691, defaultOn: false, opacity: () => 0.78 },
 };
+
 const KIND_ORDER = { artery: 0, vein: 1, nerve: 2, bone: 3, muscle: 4, organ: 5 };
 const SELECTED = new THREE.Color(0xf2b84b);
+const GLAND_COLOR = new THREE.Color(0xe0a1bb);
+
+const SALIVARY_CONTEXT = {
+  bone: ['mandible', 'hyoid bone'],
+  artery: ['facial artery', 'lingual artery', 'submental artery', 'sublingual artery'],
+  vein: ['facial vein', 'lingual vein', 'sublingual vein'],
+  nerve: ['lingual nerve', 'hypoglossal nerve', 'submandibular ganglion', 'chorda tympani'],
+  muscle: ['mylohyoid', 'hyoglossus', 'genioglossus', 'geniohyoid', 'digastric', 'stylohyoid'],
+  organ: ['submandibular gland', 'sublingual gland', 'tongue'],
+};
 
 const $ = (selector) => document.querySelector(selector);
 const viewer = $('#viewer');
@@ -37,8 +53,15 @@ const hideBtn = $('#hideBtn');
 const showAllBtn = $('#showAllBtn');
 const boneOpacityInput = $('#boneOpacityInput');
 const boneOpacityValue = $('#boneOpacityValue');
+const mobileBoneOpacityInput = $('#mobileBoneOpacityInput');
+const mobileBoneOpacityValue = $('#mobileBoneOpacityValue');
 const atlasStatus = $('#vesselStatus');
 const featuredVessels = $('#featuredVessels');
+const salivaryPresetBtn = $('#salivaryPresetBtn');
+const mobileSalivaryPresetBtn = $('#mobileSalivaryPresetBtn');
+const clearStudyPresetBtn = $('#clearStudyPresetBtn');
+const studyModeBadge = $('#studyModeBadge');
+const studyModeStatus = $('#studyModeStatus');
 const layerToggles = Object.fromEntries(Object.keys(LAYERS).map((kind) => [kind, $(`#${kind}Toggle`)]));
 
 const scene = new THREE.Scene();
@@ -90,13 +113,69 @@ const loader = new GLTFLoader();
 function normalize(value = '') {
   return value.toLowerCase().replace(/[_-]+/g, ' ').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
+
 function prettyName(value = '') {
   return value.replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/\b(left|right)\b/i, (s) => s[0].toUpperCase() + s.slice(1).toLowerCase());
 }
+
 function parseIds(name = '') {
-  return { fj: name.match(/\bFJ\d+\b/i)?.[0]?.toUpperCase() || null, fma: name.match(/\bFMA\d+\b/i)?.[0]?.toUpperCase() || null };
+  return {
+    fj: name.match(/\bFJ\d+M?\b/i)?.[0]?.toUpperCase() || null,
+    fma: name.match(/\bFMA\d+\b/i)?.[0]?.toUpperCase() || null,
+  };
 }
-function kindLabel(kind) { return LAYERS[kind]?.label || 'Structure'; }
+
+function kindLabel(kind) {
+  return LAYERS[kind]?.label || 'Structure';
+}
+
+function containsContext(name, kind) {
+  const text = normalize(name);
+  return (SALIVARY_CONTEXT[kind] || []).some((term) => text.includes(normalize(term)));
+}
+
+function isSalivaryGlandName(name) {
+  const text = normalize(name);
+  return text.includes('submandibular gland') || text.includes('sublingual gland');
+}
+
+function studyAllows(name, kind) {
+  if (studyMode !== 'salivary') return true;
+  return containsContext(name, kind);
+}
+
+function salivaryInfoFor(name, kind) {
+  if (kind !== 'organ') return null;
+  const text = normalize(name);
+  const title = prettyName(name);
+  if (text.includes('submandibular gland')) {
+    return {
+      kind: 'organ',
+      title,
+      overview: 'A paired major salivary gland in the submandibular region. Its superficial and deep parts are related to the mylohyoid muscle and it is a major contributor to resting salivary secretion.',
+      course: 'The larger superficial part lies below the mylohyoid; the deep part curves around the posterior border of mylohyoid into the floor of the mouth. The submandibular duct runs anteriorly toward the sublingual caruncle and has an important relationship with the lingual nerve.',
+      territory: 'Produces mixed serous and mucous saliva that drains to the floor of the mouth through the submandibular duct.',
+      clinical: 'The gland and duct are common sites of sialolithiasis. Surgery in this region requires attention to the lingual and hypoglossal nerves and nearby facial vessels.',
+      source: ['NCBI Bookshelf: Submandibular Gland', SUBMANDIBULAR_SOURCE],
+    };
+  }
+  if (text.includes('sublingual gland')) {
+    return {
+      kind: 'organ',
+      title,
+      overview: 'The smallest paired major salivary gland, positioned in the floor of the mouth beneath the mucosa and above the mylohyoid muscle.',
+      course: 'It lies inferolateral to the tongue, medial to the mandible and superior to mylohyoid, with genioglossus and hyoglossus medially. Multiple small ducts of Rivinus drain directly into the floor of the mouth; a larger duct may join the submandibular duct.',
+      territory: 'Produces predominantly mucous saliva that lubricates the floor of the mouth and oral tissues.',
+      clinical: 'Obstruction or mucus escape from the sublingual gland can contribute to a ranula. Its close floor-of-mouth relationships are important during oral and salivary procedures.',
+      source: ['NCBI Bookshelf: Sublingual Gland', SUBLINGUAL_SOURCE],
+    };
+  }
+  return null;
+}
+
+function anatomyInfoFor(name, kind) {
+  return salivaryInfoFor(name, kind) || matchAnatomyInfo(name, kind);
+}
 
 function buildCatalog(data) {
   catalog = [];
@@ -154,17 +233,32 @@ function prepareMesh(mesh, kind) {
   if (entry) entry.mesh = mesh;
 }
 
-function layerVisible(kind) { return Boolean(layerToggles[kind]?.checked); }
+function layerVisible(kind) {
+  return Boolean(layerToggles[kind]?.checked);
+}
+
 function updateMeshOpacity(mesh) {
-  const opacity = LAYERS[mesh.userData.kind].opacity();
+  const kind = mesh.userData.kind;
+  let opacity = LAYERS[kind].opacity();
+  if (studyMode === 'salivary') {
+    if (kind === 'muscle') opacity = 0.24;
+    if (kind === 'organ') opacity = isSalivaryGlandName(mesh.userData.displayName) ? 1 : 0.18;
+  }
   mesh.material.opacity = opacity;
   mesh.material.transparent = opacity < 1;
-  mesh.material.depthWrite = opacity > 0.68 || ['artery', 'vein', 'nerve'].includes(mesh.userData.kind);
+  mesh.material.depthWrite = opacity > 0.68 || ['artery', 'vein', 'nerve'].includes(kind);
+  if (mesh !== selected) {
+    if (studyMode === 'salivary' && isSalivaryGlandName(mesh.userData.displayName)) mesh.material.color.copy(GLAND_COLOR);
+    else mesh.material.color.copy(mesh.userData.baseColor);
+  }
   mesh.material.needsUpdate = true;
 }
+
 function updateVisibility() {
   for (const mesh of interactiveMeshes) {
-    mesh.visible = layerVisible(mesh.userData.kind) && !mesh.userData.hiddenByUser;
+    mesh.visible = layerVisible(mesh.userData.kind)
+      && !mesh.userData.hiddenByUser
+      && studyAllows(mesh.userData.displayName, mesh.userData.kind);
     updateMeshOpacity(mesh);
   }
   if (selected && !selected.visible) clearSelection(false);
@@ -176,7 +270,10 @@ function setLayerStateUI(kind, state) {
   const row = document.querySelector(`[data-layer-row="${kind}"]`);
   if (row) row.dataset.state = state;
 }
-function loadGLB(url, onProgress) { return new Promise((resolve, reject) => loader.load(url, resolve, onProgress, reject)); }
+
+function loadGLB(url, onProgress) {
+  return new Promise((resolve, reject) => loader.load(url, resolve, onProgress, reject));
+}
 
 async function loadLayer(kind) {
   const state = layerState[kind];
@@ -213,10 +310,14 @@ function computeBounds(meshes = interactiveMeshes, visibleOnly = false) {
   for (const mesh of meshes) {
     if (visibleOnly && !mesh.visible) continue;
     const b = new THREE.Box3().setFromObject(mesh);
-    if (!b.isEmpty()) { box.union(b); has = true; }
+    if (!b.isEmpty()) {
+      box.union(b);
+      has = true;
+    }
   }
   return has ? box : new THREE.Box3();
 }
+
 function fitCamera(box = headBounds, direction = new THREE.Vector3(0, 0, 1), padding = 1.2) {
   if (!box || box.isEmpty()) return;
   const size = box.getSize(new THREE.Vector3());
@@ -232,6 +333,7 @@ function fitCamera(box = headBounds, direction = new THREE.Vector3(0, 0, 1), pad
   controls.maxDistance = distance * 4.2;
   controls.update();
 }
+
 function focusOn(mesh) {
   const direction = camera.position.clone().sub(controls.target).normalize();
   fitCamera(new THREE.Box3().setFromObject(mesh), direction, 1.7);
@@ -241,7 +343,9 @@ function clearHighlight() {
   if (!selected?.material?.color) return;
   selected.material.color.copy(selected.userData.baseColor);
   selected.material.emissive?.set?.(0x000000);
+  updateMeshOpacity(selected);
 }
+
 function highlight(mesh) {
   if (mesh.material.emissive) {
     mesh.material.emissive.copy(SELECTED).multiplyScalar(0.38);
@@ -286,7 +390,9 @@ function renderInfo(info = null, mesh = null, entry = null) {
     appendDetail('Clinical relevance', info.clinical);
   }
   appendDetail('BodyParts3D identity', [source?.fj, source?.bp, source?.fma].filter(Boolean).join(' · '));
-  if (source?.faces) appendDetail('3D mesh detail', `${Number(source.faces).toLocaleString()} faces in the web asset${source.sourceFaces && source.sourceFaces !== source.faces ? ` (${Number(source.sourceFaces).toLocaleString()} source faces)` : ''}.`);
+  if (source?.faces) {
+    appendDetail('3D mesh detail', `${Number(source.faces).toLocaleString()} faces in the web asset${source.sourceFaces && source.sourceFaces !== source.faces ? ` (${Number(source.sourceFaces).toLocaleString()} source faces)` : ''}.`);
+  }
   const link = document.createElement('a');
   link.href = info?.source?.[1] || BODY_PARTS_PAGE;
   link.target = '_blank';
@@ -295,20 +401,43 @@ function renderInfo(info = null, mesh = null, entry = null) {
   infoSource.append('Reference: ', link);
 }
 
+function renderSalivaryStudyInfo() {
+  selectedKind.textContent = 'Study mode';
+  selectedKind.dataset.kind = 'organ';
+  selectedName.textContent = 'Salivary glands';
+  selectedMeta.textContent = 'BodyParts3D · submandibular + sublingual glands';
+  selectedOverview.textContent = 'This preset isolates the real BodyParts3D submandibular and sublingual glands and keeps selected floor-of-mouth muscles, nerves, vessels, the mandible, hyoid and tongue visible for anatomical context.';
+  infoDetails.innerHTML = '';
+  appendDetail('Available 3D glands', 'Left and right submandibular glands; left and right sublingual glands.');
+  appendDetail('Context shown', 'Mandible and hyoid; tongue; mylohyoid, hyoglossus, genioglossus, geniohyoid, digastric and stylohyoid where available; lingual and hypoglossal nerves; facial, lingual, submental and sublingual vessels where available.');
+  appendDetail('Dataset limitation', 'A separate parotid gland or major salivary duct mesh is not present in the BodyParts3D v4.3 manifest used by this app, so no synthetic parotid or duct geometry is added.');
+  infoSource.replaceChildren();
+  const link = document.createElement('a');
+  link.href = SUBMANDIBULAR_SOURCE;
+  link.target = '_blank';
+  link.rel = 'noreferrer';
+  link.textContent = 'NCBI Bookshelf: Salivary anatomy';
+  infoSource.append('Reference: ', link);
+}
+
 function clearSelection(resetInfo = true) {
   clearHighlight();
   selected = null;
   focusBtn.disabled = isolateBtn.disabled = hideBtn.disabled = true;
-  if (resetInfo) renderInfo();
+  if (resetInfo) {
+    if (studyMode === 'salivary') renderSalivaryStudyInfo();
+    else renderInfo();
+  }
   renderStructureList(searchInput.value);
 }
+
 function selectMesh(mesh, focus = false) {
   if (!mesh?.visible) return;
   clearHighlight();
   selected = mesh;
   highlight(mesh);
   const entry = mesh.userData.fj ? catalogByFj.get(mesh.userData.fj) : null;
-  const info = matchAnatomyInfo(mesh.userData.displayName, mesh.userData.kind);
+  const info = anatomyInfoFor(mesh.userData.displayName, mesh.userData.kind);
   renderInfo(info, mesh, entry);
   focusBtn.disabled = isolateBtn.disabled = hideBtn.disabled = false;
   renderStructureList(searchInput.value);
@@ -320,19 +449,31 @@ async function selectCatalogEntry(entry) {
   if (!layerState[entry.kind].loaded) {
     atlasStatus.textContent = `Loading ${LAYERS[entry.kind].label.toLowerCase()}…`;
     atlasStatus.dataset.state = 'loading';
-    try { await loadLayer(entry.kind); }
-    catch { atlasStatus.textContent = `Could not load ${LAYERS[entry.kind].label.toLowerCase()}.`; atlasStatus.dataset.state = 'error'; return; }
+    try {
+      await loadLayer(entry.kind);
+    } catch {
+      atlasStatus.textContent = `Could not load ${LAYERS[entry.kind].label.toLowerCase()}.`;
+      atlasStatus.dataset.state = 'error';
+      return;
+    }
   }
   updateVisibility();
   const mesh = entry.mesh || (entry.fj ? catalogByFj.get(entry.fj)?.mesh : null);
   if (mesh) selectMesh(mesh, true);
-  else renderInfo(matchAnatomyInfo(entry.name, entry.kind), null, entry);
+  else renderInfo(anatomyInfoFor(entry.name, entry.kind), null, entry);
+}
+
+function visibleCatalogEntries(query = '') {
+  const q = normalize(query);
+  return catalog.filter((entry) => {
+    if (!studyAllows(entry.name, entry.kind)) return false;
+    return !q || normalize(`${entry.name} ${entry.fj || ''} ${entry.fma || ''}`).includes(q);
+  });
 }
 
 function renderStructureList(query = '') {
-  const q = normalize(query);
-  const items = catalog.filter((entry) => !q || normalize(`${entry.name} ${entry.fj || ''} ${entry.fma || ''}`).includes(q));
-  countEl.textContent = catalog.length;
+  const items = visibleCatalogEntries(query);
+  countEl.textContent = studyMode === 'salivary' ? items.length : catalog.length;
   listEl.innerHTML = '';
   for (const entry of items.slice(0, 500)) {
     const button = document.createElement('button');
@@ -361,6 +502,7 @@ function findCatalogForInfo(info) {
   const aliases = info.aliases.map(normalize);
   return catalog.find((entry) => entry.kind === info.kind && aliases.some((alias) => normalize(entry.name).includes(alias) || alias.includes(normalize(entry.name)))) || null;
 }
+
 function renderFeaturedVessels() {
   featuredVessels.innerHTML = '';
   for (const id of FEATURED_VESSEL_IDS) {
@@ -381,22 +523,26 @@ function updateLayerSummary() {
   atlasStatus.textContent = `${catalog.length.toLocaleString()} detailed structures indexed · loaded: ${loaded.join(', ') || 'none'}`;
   atlasStatus.dataset.state = 'ready';
 }
+
 function showAll() {
   for (const mesh of interactiveMeshes) mesh.userData.hiddenByUser = false;
   updateVisibility();
 }
+
 function isolateSelected() {
   if (!selected) return;
   for (const mesh of interactiveMeshes) mesh.visible = mesh === selected;
   focusOn(selected);
 }
+
 function hideSelected() {
   if (!selected) return;
   const mesh = selected;
   clearSelection(false);
   mesh.userData.hiddenByUser = true;
   mesh.visible = false;
-  renderInfo();
+  if (studyMode === 'salivary') renderSalivaryStudyInfo();
+  else renderInfo();
 }
 
 function pick(event) {
@@ -408,10 +554,18 @@ function pick(event) {
   if (hits[0]?.object) selectMesh(hits[0].object);
   else clearSelection();
 }
+
 function setPreset(name) {
-  const dirs = { front: new THREE.Vector3(0, 0, 1), back: new THREE.Vector3(0, 0, -1), left: new THREE.Vector3(1, 0, 0), right: new THREE.Vector3(-1, 0, 0) };
-  fitCamera(headBounds, dirs[name] || dirs.front);
+  const dirs = {
+    front: new THREE.Vector3(0, 0, 1),
+    back: new THREE.Vector3(0, 0, -1),
+    left: new THREE.Vector3(1, 0, 0),
+    right: new THREE.Vector3(-1, 0, 0),
+  };
+  const box = studyMode === 'salivary' ? computeBounds(interactiveMeshes.filter((mesh) => mesh.visible)) : headBounds;
+  fitCamera(box, dirs[name] || dirs.front);
 }
+
 function resize() {
   const { clientWidth, clientHeight } = viewer;
   camera.aspect = Math.max(clientWidth, 1) / Math.max(clientHeight, 1);
@@ -419,6 +573,7 @@ function resize() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, clientWidth < 900 ? 1.25 : 1.65));
   renderer.setSize(clientWidth, clientHeight, false);
 }
+
 function syncMobileButtons() {
   for (const button of document.querySelectorAll('[data-mobile-layer]')) {
     const on = layerVisible(button.dataset.mobileLayer);
@@ -426,21 +581,95 @@ function syncMobileButtons() {
     button.setAttribute('aria-pressed', String(on));
   }
 }
+
+function setBoneOpacity(value) {
+  boneOpacity = Math.max(0.1, Math.min(1, Number(value)));
+  const percent = `${Math.round(boneOpacity * 100)}%`;
+  boneOpacityInput.value = String(boneOpacity);
+  boneOpacityValue.textContent = percent;
+  if (mobileBoneOpacityInput) mobileBoneOpacityInput.value = String(boneOpacity);
+  if (mobileBoneOpacityValue) mobileBoneOpacityValue.textContent = percent;
+  layerState.bone.meshes.forEach(updateMeshOpacity);
+}
+
+function syncStudyUI() {
+  const active = studyMode === 'salivary';
+  salivaryPresetBtn?.classList.toggle('active', active);
+  mobileSalivaryPresetBtn?.classList.toggle('active', active);
+  if (clearStudyPresetBtn) clearStudyPresetBtn.disabled = !active;
+  if (studyModeBadge) studyModeBadge.textContent = active ? 'Salivary' : 'Off';
+  if (studyModeStatus) {
+    studyModeStatus.textContent = active
+      ? 'Showing real submandibular and sublingual glands with selected floor-of-mouth muscles, nerves, vessels, mandible, hyoid and tongue. Parotid/major duct meshes are not available in this dataset.'
+      : 'Focus the atlas on the submandibular and sublingual glands with their nearby nerves, vessels, floor-of-mouth muscles, mandible and tongue.';
+  }
+}
+
 async function onLayerToggle(kind) {
   if (layerVisible(kind) && !layerState[kind].loaded) {
     atlasStatus.textContent = `Loading ${LAYERS[kind].label.toLowerCase()}…`;
     atlasStatus.dataset.state = 'loading';
-    try { await loadLayer(kind); }
-    catch { atlasStatus.textContent = `Could not load ${LAYERS[kind].label.toLowerCase()}.`; atlasStatus.dataset.state = 'error'; return; }
+    try {
+      await loadLayer(kind);
+    } catch {
+      atlasStatus.textContent = `Could not load ${LAYERS[kind].label.toLowerCase()}.`;
+      atlasStatus.dataset.state = 'error';
+      return;
+    }
   }
   updateVisibility();
   updateLayerSummary();
 }
 
+async function activateSalivaryMode() {
+  if (studyMode === 'salivary') return;
+  studyMode = 'salivary';
+  syncStudyUI();
+  clearSelection(false);
+  setBoneOpacity(0.22);
+  for (const kind of Object.keys(LAYERS)) layerToggles[kind].checked = true;
+  atlasStatus.textContent = 'Loading salivary gland study context…';
+  atlasStatus.dataset.state = 'loading';
+  const results = await Promise.allSettled(Object.keys(LAYERS).map((kind) => loadLayer(kind)));
+  const failed = results.filter((result) => result.status === 'rejected').length;
+  for (const mesh of interactiveMeshes) mesh.userData.hiddenByUser = false;
+  updateVisibility();
+  renderSalivaryStudyInfo();
+  syncStudyUI();
+  const focusMeshes = interactiveMeshes.filter((mesh) => mesh.visible && isSalivaryGlandName(mesh.userData.displayName));
+  const contextMeshes = interactiveMeshes.filter((mesh) => mesh.visible);
+  const box = computeBounds(focusMeshes.length ? [...focusMeshes, ...contextMeshes] : contextMeshes);
+  fitCamera(box.isEmpty() ? headBounds : box, new THREE.Vector3(0, 0, 1), 1.18);
+  atlasStatus.textContent = failed
+    ? `Salivary study mode active · ${failed} optional layer${failed === 1 ? '' : 's'} could not load.`
+    : 'Salivary study mode active · real BodyParts3D glands and anatomical context loaded.';
+  atlasStatus.dataset.state = failed ? 'error' : 'ready';
+}
+
+function clearStudyMode() {
+  studyMode = null;
+  clearSelection(false);
+  for (const [kind, toggle] of Object.entries(layerToggles)) toggle.checked = LAYERS[kind].defaultOn;
+  setBoneOpacity(0.42);
+  for (const mesh of interactiveMeshes) mesh.userData.hiddenByUser = false;
+  updateVisibility();
+  syncStudyUI();
+  renderInfo();
+  fitCamera(headBounds);
+  updateLayerSummary();
+}
+
+async function selectSalivaryTarget(target) {
+  if (studyMode !== 'salivary') await activateSalivaryMode();
+  const q = normalize(target);
+  const entry = catalog.find((item) => item.kind === 'organ' && normalize(item.name).includes(q));
+  if (entry) await selectCatalogEntry(entry);
+}
+
 async function boot() {
   try {
     loadingText.textContent = 'Reading BodyParts3D structure manifest…';
-    const response = await fetch(`${MANIFEST_URL}?v=bp43`, { cache: 'no-cache' });
+    const response = await fetch(`${MANIFEST_URL}?v=bp43-3`, { cache: 'no-cache' });
     if (!response.ok) throw new Error(`Manifest HTTP ${response.status}`);
     const manifest = await response.json();
     buildCatalog(manifest);
@@ -466,25 +695,38 @@ async function boot() {
   }
 }
 
-renderer.domElement.addEventListener('pointerdown', (event) => { pointerDown = { x: event.clientX, y: event.clientY }; });
+renderer.domElement.addEventListener('pointerdown', (event) => {
+  pointerDown = { x: event.clientX, y: event.clientY };
+});
+
 renderer.domElement.addEventListener('pointerup', (event) => {
   if (!pointerDown || event.button !== 0) return;
   const moved = Math.hypot(event.clientX - pointerDown.x, event.clientY - pointerDown.y);
   pointerDown = null;
   if (moved < 6) pick(event);
 });
+
 searchInput.addEventListener('input', () => renderStructureList(searchInput.value));
 focusBtn.addEventListener('click', () => selected && focusOn(selected));
 isolateBtn.addEventListener('click', isolateSelected);
 hideBtn.addEventListener('click', hideSelected);
-showAllBtn.addEventListener('click', () => { showAll(); fitCamera(headBounds); });
-$('#resetBtn').addEventListener('click', () => { showAll(); fitCamera(headBounds); });
+showAllBtn.addEventListener('click', () => {
+  showAll();
+  const box = studyMode === 'salivary' ? computeBounds(interactiveMeshes.filter((mesh) => mesh.visible)) : headBounds;
+  fitCamera(box.isEmpty() ? headBounds : box);
+});
+$('#resetBtn').addEventListener('click', () => {
+  showAll();
+  const box = studyMode === 'salivary' ? computeBounds(interactiveMeshes.filter((mesh) => mesh.visible)) : headBounds;
+  fitCamera(box.isEmpty() ? headBounds : box);
+});
 document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => setPreset(button.dataset.view)));
 
 for (const [kind, toggle] of Object.entries(layerToggles)) {
   toggle.checked = LAYERS[kind].defaultOn;
   toggle.addEventListener('change', () => onLayerToggle(kind));
 }
+
 document.querySelectorAll('[data-mobile-layer]').forEach((button) => {
   button.addEventListener('click', () => {
     const kind = button.dataset.mobileLayer;
@@ -493,19 +735,34 @@ document.querySelectorAll('[data-mobile-layer]').forEach((button) => {
     toggle.dispatchEvent(new Event('change', { bubbles: true }));
   });
 });
-boneOpacityInput.addEventListener('input', () => {
-  boneOpacityValue.textContent = `${Math.round(Number(boneOpacityInput.value) * 100)}%`;
-  layerState.bone.meshes.forEach(updateMeshOpacity);
+
+boneOpacityInput.addEventListener('input', () => setBoneOpacity(boneOpacityInput.value));
+mobileBoneOpacityInput?.addEventListener('input', () => setBoneOpacity(mobileBoneOpacityInput.value));
+salivaryPresetBtn?.addEventListener('click', activateSalivaryMode);
+mobileSalivaryPresetBtn?.addEventListener('click', () => {
+  if (studyMode === 'salivary') clearStudyMode();
+  else activateSalivaryMode();
+});
+clearStudyPresetBtn?.addEventListener('click', clearStudyMode);
+document.querySelectorAll('[data-salivary-target]').forEach((button) => {
+  button.addEventListener('click', () => selectSalivaryTarget(button.dataset.salivaryTarget));
 });
 
 const aboutDialog = $('#aboutDialog');
 $('#aboutBtn').addEventListener('click', () => aboutDialog.showModal());
 $('#closeAbout').addEventListener('click', () => aboutDialog.close());
-aboutDialog.addEventListener('click', (event) => { if (event.target === aboutDialog) aboutDialog.close(); });
+aboutDialog.addEventListener('click', (event) => {
+  if (event.target === aboutDialog) aboutDialog.close();
+});
 
+setBoneOpacity(0.42);
 renderInfo();
+syncStudyUI();
 syncMobileButtons();
 new ResizeObserver(resize).observe(viewer);
 resize();
-renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
+renderer.setAnimationLoop(() => {
+  controls.update();
+  renderer.render(scene, camera);
+});
 boot();
