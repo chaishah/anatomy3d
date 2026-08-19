@@ -1,6 +1,7 @@
 name: Build Open Anatomy head assets
 
 # Asset generation is intentionally separated from the runtime viewer.
+# PR validation exercises the official atlas conversion before runtime assets are switched.
 on:
   workflow_dispatch:
   push:
