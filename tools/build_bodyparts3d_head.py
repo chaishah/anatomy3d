@@ -8,7 +8,7 @@ not literally contain the word `muscle`.
 """
 from __future__ import annotations
 
-import tools.build_bodyparts3d_assets as builder
+import build_bodyparts3d_assets as builder
 
 
 def classify_head(name: str) -> str | None:
