@@ -1,6 +1,7 @@
 name: Build Open Anatomy head assets
 
 # Asset generation is intentionally separated from the runtime viewer.
+# PR validation exercises the official atlas conversion before runtime assets are switched.
 on:
   workflow_dispatch:
   push:
@@ -33,10 +34,9 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-          cache: pip
 
       - name: Install mesh tooling
-        run: python -m pip install --upgrade numpy trimesh vtk
+        run: python -m pip install --upgrade numpy scipy trimesh vtk
 
       - name: Build registered SPL Head & Neck GLBs
         id: build
