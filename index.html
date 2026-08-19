@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0b0f14" />
   <meta name="description" content="Interactive 3D head, skull, artery and vein anatomy explorer powered by Z-Anatomy." />
   <title>Anatomy3D — Head & Vessels</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=3" />
   <script type="importmap">
     {
       "imports": {
@@ -59,7 +59,7 @@
             <span>Bone opacity <strong id="boneOpacityValue">55%</strong></span>
             <input id="boneOpacityInput" type="range" min="0.15" max="1" value="0.55" step="0.05" />
           </label>
-          <p id="vesselStatus" class="load-status">Vessels load after the skull so the viewer becomes usable first.</p>
+          <p id="vesselStatus" class="load-status">Major head arteries and veins are built directly after the skull loads.</p>
         </section>
 
         <div class="section-heading">
@@ -124,7 +124,7 @@
 
         <div class="info-card">
           <strong>Head-focused model</strong>
-          <p>Long, thin annotation/helper meshes are filtered out. Arteries are shown in red and veins/dural sinuses in blue. The vascular FBX is also filtered to the head and skull-base region.</p>
+          <p>Long, thin helper meshes are filtered out. Major arteries are shown in red and veins/dural sinuses in blue as a clean educational 3D overlay aligned to the skull.</p>
         </div>
       </aside>
     </main>
@@ -134,12 +134,12 @@
     <button id="closeAbout" class="dialog-close" aria-label="Close">×</button>
     <p class="eyebrow">Attribution & scope</p>
     <h2>Anatomy3D Head & Vessels</h2>
-    <p>This prototype uses the open-source Z-Anatomy skeletal and cardiovascular FBX models. The full upstream files are loaded at runtime, then filtered to the head inside your browser.</p>
-    <p>Written vessel summaries are educational reference notes based on standard anatomy sources, including NCBI Bookshelf/StatPearls. They are not medical advice.</p>
+    <p>The skull model is loaded from the open-source Z-Anatomy skeletal FBX. Major head arteries, veins and dural sinuses are rendered as an educational 3D overlay aligned to the skull so they remain reliable and fast in the browser.</p>
+    <p>The vessel overlay is schematic rather than patient-specific imaging. Written vessel summaries are educational reference notes based on standard anatomy sources, including NCBI Bookshelf/StatPearls. They are not medical advice.</p>
     <p>See <code>ATTRIBUTION.md</code> in this repository for model licensing details.</p>
   </dialog>
 
   <noscript>This app requires JavaScript and WebGL.</noscript>
-  <script type="module" src="./app.js"></script>
+  <script type="module" src="./app.js?v=3"></script>
 </body>
 </html>
