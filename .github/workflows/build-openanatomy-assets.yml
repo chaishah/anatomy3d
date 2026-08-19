@@ -1,8 +1,8 @@
 name: Build Open Anatomy head assets
 
 # Generate registered web assets from the official SPL Head & Neck atlas.
-# The workflow also deploys the generated checkout directly because pushes made
-# by GITHUB_TOKEN do not trigger a second Pages workflow.
+# The workflow uploads the generated checkout to Pages directly because pushes
+# made by GITHUB_TOKEN do not trigger a second workflow run.
 on:
   workflow_dispatch:
   push:
@@ -29,8 +29,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment:
-      name: ${{ github.event_name == 'push' && 'github-pages' || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -83,17 +81,24 @@ jobs:
         if: github.event_name == 'push' && steps.build.outcome == 'success'
         uses: actions/configure-pages@v5
 
-      - name: Upload site to Pages
+      - name: Upload generated site to Pages
         if: github.event_name == 'push' && steps.build.outcome == 'success'
         uses: actions/upload-pages-artifact@v4
         with:
           path: .
 
-      - name: Deploy generated atlas site
-        if: github.event_name == 'push' && steps.build.outcome == 'success'
-        id: deployment
-        uses: actions/deploy-pages@v4
-
       - name: Fail if atlas conversion failed
         if: steps.build.outcome == 'failure'
         run: exit 1
+
+  deploy:
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy generated atlas site
+        id: deployment
+        uses: actions/deploy-pages@v4
