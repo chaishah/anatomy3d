@@ -1,0 +1,53 @@
+{
+  "bytes": 53776,
+  "coordinateSystem": "Unchanged from BodyParts3D Anatomy3D web export",
+  "note": "Includes the four available submandibular/sublingual gland meshes plus tongue context when available. No synthetic parotid or duct geometry.",
+  "output": "assets/bodyparts3d/head-salivary.glb",
+  "selectedFJ": [
+    "FJ2761",
+    "FJ2765",
+    "FJ2766",
+    "FJ2767",
+    "FJ2768",
+    "FJ4643"
+  ],
+  "source": "assets/bodyparts3d/head-organs.glb",
+  "structures": [
+    {
+      "faces": 524,
+      "fj_id": "FJ2761",
+      "geometry": "Tongue \u00b7 FJ2761 \u00b7 FMA49443",
+      "node": "Tongue \u00b7 FJ2761 \u00b7 FMA49443"
+    },
+    {
+      "faces": 228,
+      "fj_id": "FJ2768",
+      "geometry": "Right submandibular gland \u00b7 FJ2768 \u00b7 FMA55093",
+      "node": "Right submandibular gland \u00b7 FJ2768 \u00b7 FMA55093"
+    },
+    {
+      "faces": 244,
+      "fj_id": "FJ2767",
+      "geometry": "Right sublingual gland \u00b7 FJ2767 \u00b7 FMA55661",
+      "node": "Right sublingual gland \u00b7 FJ2767 \u00b7 FMA55661"
+    },
+    {
+      "faces": 228,
+      "fj_id": "FJ2766",
+      "geometry": "Left submandibular gland \u00b7 FJ2766 \u00b7 FMA55093",
+      "node": "Left submandibular gland \u00b7 FJ2766 \u00b7 FMA55093"
+    },
+    {
+      "faces": 230,
+      "fj_id": "FJ4643",
+      "geometry": "Left sublingual gland \u00b7 FJ4643 \u00b7 FMA55661",
+      "node": "Left sublingual gland \u00b7 FJ4643 \u00b7 FMA55661"
+    },
+    {
+      "faces": 230,
+      "fj_id": "FJ2765",
+      "geometry": "Left sublingual gland \u00b7 FJ2765 \u00b7 FMA55661",
+      "node": "Left sublingual gland \u00b7 FJ2765 \u00b7 FMA55661"
+    }
+  ]
+}
