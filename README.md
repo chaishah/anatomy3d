@@ -1,34 +1,49 @@
-# Anatomy3D — Open Anatomy Head & Vessels
+# Anatomy3D — Detailed BodyParts3D Head Atlas
 
-A static, mobile-friendly interactive 3D head and neck anatomy explorer for GitHub Pages using Three.js and the **Open Anatomy SPL Head & Neck Atlas**.
+A static, mobile-friendly interactive 3D head anatomy explorer for GitHub Pages using Three.js and detailed **BodyParts3D / Anatomography v4.3 component meshes**.
 
 ## Current runtime
 
-The browser no longer generates schematic vessels and no longer downloads the large Z-Anatomy FBX files.
+The live viewer uses BodyParts3D assets under `assets/bodyparts3d/`. All systems are converted from the same shared atlas coordinate system; vessels, nerves, muscles and organs are not procedurally drawn and are not independently realigned in the browser.
 
-It loads three compact, registered GLB assets generated from the official SPL Head & Neck Slicer/MRML scene:
+Validated web layers:
 
-- `assets/openanatomy/head-bones.glb`
-- `assets/openanatomy/head-arteries.glb`
-- `assets/openanatomy/head-veins.glb`
+- **Bones & teeth:** 80 meshes, ~8.2 MB
+- **Arteries:** 435 meshes, ~10.4 MB
+- **Veins & venous structures:** 66 meshes, ~4.2 MB
+- **Nerves:** 165 meshes, ~8.6 MB
+- **Muscles:** 63 meshes, ~9.1 MB
+- **Brain / eye / related organs:** 155 meshes, ~34.5 MB
 
-The three files preserve the atlas registration, so bones and vessels share the same coordinate system.
+The manifest indexes **964 detailed selectable components** with FJ/FMA identifiers.
+
+## Performance strategy
+
+The browser does not download all ~76 MB at startup.
+
+- Bones load first so the viewer becomes usable quickly.
+- Arteries and veins then load in parallel.
+- Nerves, muscles and brain/organs are lazy-loaded only when their layer is enabled or a search result requires them.
+- Device pixel ratio is capped on mobile and desktop for smoother rotation.
+- Individual very large source meshes are conservatively decimated; smaller structures keep their original detailed geometry.
 
 ## Features
 
-- Registered skull/mandible/hyoid geometry from the SPL atlas.
-- Registered major head and neck arteries from the same atlas.
-- Registered venous anatomy from the same atlas.
-- Separate Bones, Arteries and Veins layers.
-- Adjustable bone opacity for viewing vessels through the skull.
-- Rotate, zoom and pan with mouse or touch.
-- Click/tap structures to identify and highlight them.
-- Search loaded structures.
-- Focus, isolate, hide and restore structures.
-- Written educational anatomy information for supported vessels and bones.
-- Front/left/right/back camera presets.
-- Mobile-friendly interface.
-- No backend or database.
+- Six independently controlled anatomy systems.
+- Detailed facial, deep-face, cerebral and carotid arterial component meshes where present in BodyParts3D.
+- Detailed venous structures and venous sinuses where present.
+- Cranial/head nerve structures and branches.
+- Skull, facial bones and teeth.
+- Head/facial/masticatory muscles.
+- Brain, eye and related head structures.
+- Global search by anatomical name, **FMA ID**, or **FJ mesh ID**.
+- Selecting an unloaded search result automatically loads the required anatomical system.
+- Rotate, zoom and pan with mouse/touch.
+- Focus, isolate, hide and restore individual meshes.
+- Adjustable bone opacity.
+- Written educational information for curated major structures plus BodyParts3D source identity and mesh detail for every component.
+- Mobile system controls.
+- No backend and no database.
 
 ## Live site
 
@@ -36,35 +51,27 @@ The three files preserve the atlas registration, so bones and vessels share the 
 
 GitHub Pages deploys from `main` using `.github/workflows/pages.yml`.
 
-The Open Anatomy asset workflow also deploys its generated checkout directly. This is intentional because commits created by `GITHUB_TOKEN` do not trigger a second workflow automatically.
+## BodyParts3D build pipeline
 
-## Open Anatomy build pipeline
+The production asset workflow is `.github/workflows/build-bodyparts3d-assets.yml`.
 
-`tools/build_openanatomy_assets.py` performs the one-time conversion used by the site:
+`tools/build_bodyparts3d_assets.py` plus `tools/build_bodyparts3d_head.py`:
 
-1. Download the official Open Anatomy SPL Head & Neck atlas archive.
-2. Parse the Slicer MRML scene and model hierarchy.
-3. Resolve the atlas VTK model files.
-4. Apply linear MRML model transforms when present.
-5. Convert Slicer RAS coordinates to the Three.js coordinate basis used by the viewer.
-6. Select bone, artery and vein structures.
-7. Clean and conservatively decimate the meshes for browser performance.
-8. Export registered GLB files plus `manifest.json` and `build-report.json`.
+1. Read the BodyParts3D v4.3 structure index to select head-focused component IDs.
+2. Validate selected FJ IDs against the official version-stamped v4.3 `FMA2Obj` object universe.
+3. Download the actual component OBJ geometry from the BodyParts3D / Anatomography service.
+4. Preserve the common BodyParts3D millimetre coordinate system.
+5. Convert `(X=left, Y=posterior, Z=superior)` to the viewer basis `(X=left, Y=superior, Z=anterior)` once for every system.
+6. Conservatively simplify only meshes above per-system face budgets.
+7. Export six independently lazy-loadable GLBs while preserving FJ/FMA identity.
+8. Generate `manifest.json` and a validation report.
 
-The generated runtime files are roughly 5 MB total, instead of loading large whole-body FBX files in the browser.
+A full build is exercised in GitHub Actions before the runtime is changed, and the workflow fails if required anatomical categories are missing.
 
-## Why Slicer is not bundled into the website
+## Educational scope
 
-The source atlas is a 3D Slicer scene, but running Slicer in the browser is unnecessary and would make the site much heavier. Slicer remains useful for inspecting or editing the source atlas. The website consumes the pre-exported GLB assets for fast WebGL rendering.
-
-## Atlas scope
-
-The SPL Head & Neck Atlas contains a limited set of vascular structures. The current viewer intentionally shows the **real vessels present in this atlas** rather than inventing missing facial or intracranial branches. Runtime filtering removes non-head-focused proximal structures such as the aortic arch, superior vena cava and subclavian vessels from the interactive list.
-
-## Educational information
-
-The written anatomy summaries are short educational reference notes based on standard sources, including NCBI Bookshelf/StatPearls where available. They are not medical advice.
+This is an educational atlas, not patient-specific imaging and not a diagnostic application.
 
 ## Source and licensing
 
-See `ATTRIBUTION.md` and `assets/openanatomy/manifest.json` for source, modification and licensing information.
+See `ATTRIBUTION.md` and `assets/bodyparts3d/manifest.json` for source, license and modification details.
