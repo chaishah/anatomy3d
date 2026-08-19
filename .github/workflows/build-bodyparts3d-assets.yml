@@ -1,16 +1,19 @@
 name: Build BodyParts3D detailed head assets
 
+# PRs run the full geometry conversion so source selection and the official download path are validated before deployment.
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
       - tools/build_bodyparts3d_assets.py
+      - tools/build_bodyparts3d_head.py
       - .github/workflows/build-bodyparts3d-assets.yml
   pull_request:
     branches: [main]
     paths:
       - tools/build_bodyparts3d_assets.py
+      - tools/build_bodyparts3d_head.py
       - .github/workflows/build-bodyparts3d-assets.yml
 
 permissions:
@@ -41,7 +44,7 @@ jobs:
       - name: Build detailed BodyParts3D head GLBs
         id: build
         continue-on-error: true
-        run: python tools/build_bodyparts3d_assets.py --output assets/bodyparts3d
+        run: python tools/build_bodyparts3d_head.py --output assets/bodyparts3d
 
       - name: Validate generated assets
         if: steps.build.outcome == 'success'
